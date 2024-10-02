@@ -196,14 +196,18 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
         try:
-            ConsumerUnit.create_consumer_unit_and_contract(data["consumer_unit"], data["contract"])
+            created_uc, created_contract = ConsumerUnit.create_consumer_unit_and_contract(data["consumer_unit"], data["contract"])
+
+            serializer = serializers.ConsumerUnitSerializer(created_uc, context={'request': request})
 
             self.delete_related_view_cache(
                 additional_viewsets=["contracts.views.ContractViewSet", "universities.views.ConsumerUnitViewSet"]
             )
-            return Response({"message": "Consumer Unit and Contract created successfully"}, status=status.HTTP_200_OK)
-        except ValidationError as error:
-            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(serializer.data, status.HTTP_201_CREATED)
+
+        except Exception as error:
+            raise Exception(str(error))
 
     @swagger_auto_schema(request_body=serializers.CreateConsumerUnitAndContractSerializerForDocs)
     @action(detail=False, methods=["post"])
