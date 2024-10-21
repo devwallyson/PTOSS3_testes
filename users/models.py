@@ -113,7 +113,7 @@ class CustomUser(AbstractUser):
     )
 
     last_name = models.CharField(
-        max_length=25
+        max_length=50
     )
 
     email = models.EmailField(
