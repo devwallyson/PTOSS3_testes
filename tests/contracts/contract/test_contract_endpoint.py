@@ -39,15 +39,12 @@ class TestContractEndpoint:
 
 
     def test_read_contract_subgroup_A3(self):
-        assert self.contract_test_3.supply_voltage == 69
         assert self.contract_test_3.subgroup == 'A3'
     
     def test_read_contract_subgroup_A2(self):
-        assert self.contract_test_1.supply_voltage == 100.00
         assert self.contract_test_1.subgroup == 'A2'
 
     def test_read_contract_subgroup_A1(self):
-        assert self.contract_test_2.supply_voltage == 250.00
         assert self.contract_test_2.subgroup == 'A1'
         
     # TODO:

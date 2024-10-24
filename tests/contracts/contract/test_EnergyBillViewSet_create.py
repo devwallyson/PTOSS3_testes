@@ -48,7 +48,7 @@ class TestEnergyBillViewSetTests:
             'consumer_unit': created_consumer_unit['id'],
             'start_date': '2023-01-01',  # Adicione a data de início do contrato
             'end_date': '2023-12-31',    # Adicione a data de término do contrato
-            'supply_voltage': 100.00,
+            'subgroup': 'A2',
             'distributor': self.distributor.id,
         }
         contract_response = self.client.post('/api/contracts/', contract_data, format='json')
@@ -132,7 +132,7 @@ class TestEnergyBillViewSetTests:
             'consumer_unit': created_consumer_unit['id'],
             'start_date': '2023-01-01',  # Adicione a data de início do contrato
             'end_date': '2023-12-31',    # Adicione a data de término do contrato
-            'supply_voltage': 100.00,
+            'subgroup': 'A2',
             'distributor': self.distributor.id,
         }
         contract_response = self.client.post('/api/contracts/', contract_data, format='json')
@@ -182,7 +182,7 @@ class TestEnergyBillViewSetTests:
             'consumer_unit': created_consumer_unit['id'],
             'start_date': '2023-01-01',  
             'end_date': '2023-12-31',    
-            'supply_voltage': 100.00,
+            'subgroup': 'A2',
             'distributor': self.distributor.id,
         }
         contract_response = self.client.post('/api/contracts/', contract_data, format='json')
@@ -234,7 +234,7 @@ class TestEnergyBillViewSetTests:
             'consumer_unit': created_consumer_unit['id'],
             'start_date': '2023-01-01',  
             'end_date': '2023-12-31',    
-            'supply_voltage': 100.00,
+            'subgroup': 'A2',
             'distributor': self.distributor.id,
         }
         contract_response = self.client.post('/api/contracts/', contract_data, format='json')
@@ -287,7 +287,7 @@ class TestEnergyBillViewSetTests:
             'consumer_unit': created_consumer_unit['id'],
             'start_date': '2023-01-01',  
             'end_date': '2023-12-31',    
-            'supply_voltage': 100.00,
+            'subgroup': 'A2',
             'distributor': self.distributor.id,
         }
         contract_response = self.client.post('/api/contracts/', contract_data, format='json')

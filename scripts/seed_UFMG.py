@@ -171,7 +171,7 @@ contract2 = Contract.objects.create(
     consumer_unit=uc_campus_centro,
     distributor=distributor_cemig,
     start_date=date(2023,1,1),
-    supply_voltage=69,
+    subgroup="A3",
     peak_contracted_demand_in_kw=1000,
     off_peak_contracted_demand_in_kw=1680,
 )
@@ -188,7 +188,7 @@ contract_campus_pampulha = Contract.objects.create(
     consumer_unit=uc_campus_pampulha,
     distributor=distributor_cemig,
     start_date=date(2023,2,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=150,
     off_peak_contracted_demand_in_kw=100,
 )
@@ -205,7 +205,7 @@ contract_montes_claros = Contract.objects.create(
     consumer_unit=uc_montes_claros,
     distributor=distributor_elektro,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=350,
     off_peak_contracted_demand_in_kw=600,
 )
@@ -223,7 +223,7 @@ contract_fazenda_modelo_0 = Contract.objects.create(
     distributor=distributor_ceee,
     start_date=date(2022,1,1),
     end_date=date(2023,12,31),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=150,
     off_peak_contracted_demand_in_kw=150,
 )
@@ -233,7 +233,7 @@ contract_fazenda_modelo = Contract.objects.create(
     consumer_unit=uc_fazenda_modelo,
     distributor=distributor_cemig,
     start_date=date(2024,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=150,
     off_peak_contracted_demand_in_kw=150,
 )
@@ -250,7 +250,7 @@ contract_fazenda_experimental = Contract.objects.create(
     consumer_unit=uc_fazenda_experimental,
     distributor=distributor_cemig,
     start_date=date(2023,4,1),
-    supply_voltage=95,
+    subgroup="A2",
     peak_contracted_demand_in_kw=300,
     off_peak_contracted_demand_in_kw=385,
 )
@@ -267,7 +267,7 @@ contract_pampulha_ru_i = Contract.objects.create(
     consumer_unit=uc_pampulha_ru_i,
     distributor=distributor_cemig,
     start_date=date(2022,10,1),
-    supply_voltage=2.1,
+    subgroup="AS",
     peak_contracted_demand_in_kw=300,
     off_peak_contracted_demand_in_kw=385,
 )
@@ -284,7 +284,7 @@ contract_pampulha_ru_ii = Contract.objects.create(
     consumer_unit=uc_pampulha_ru_ii,
     distributor=distributor_cemig,
     start_date=date(2022,12,1),
-    supply_voltage=2.1,
+    subgroup="AS",
     peak_contracted_demand_in_kw=300,
     off_peak_contracted_demand_in_kw=385,
 )
@@ -301,7 +301,7 @@ contract_pampulha_praca = Contract.objects.create(
     consumer_unit=uc_pampulha_praca,
     distributor=distributor_cemig,
     start_date=date(2022,10,1),
-    supply_voltage=2.1,
+    subgroup="AS",
     peak_contracted_demand_in_kw=250,
     off_peak_contracted_demand_in_kw=350,
 )
@@ -318,7 +318,7 @@ contract_diamantina = Contract.objects.create(
     consumer_unit=uc_diamantina,
     distributor=distributor_dme,
     start_date=date(2022,8,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=300,
     off_peak_contracted_demand_in_kw=300,
 )
@@ -335,7 +335,7 @@ contract_pampulha_teatro = Contract.objects.create(
     consumer_unit=uc_pampulha_teatro,
     distributor=distributor_cemig,
     start_date=date(2023,10,1),
-    supply_voltage=35,
+    subgroup="A3a",
     peak_contracted_demand_in_kw=250,
     off_peak_contracted_demand_in_kw=350,
 )
@@ -352,7 +352,7 @@ contract_campus_tiradentes = Contract.objects.create(
     consumer_unit=uc_campus_tiradentes,
     distributor=distributor_cemig,
     start_date=date(2022,10,1),
-    supply_voltage=250,
+    subgroup="A1",
     peak_contracted_demand_in_kw=250,
     off_peak_contracted_demand_in_kw=350,
 )
@@ -367,7 +367,7 @@ table_uc_campus_centro = [['2023-02-01', 20707.0, 281450.0, 538.00, 1306.62, 211
                           ['2023-08-01', 23281.0, 216430.0, 635.04, 1014.30, 209543.13],
                           ['2023-09-01', 34557.0, 278715.0, 811.44, 1326.78, 249685.69],
                           ['2023-10-01', 53644.0, 399173.0, 1278.90, 1929.06, 385557.59],
-                          ['2023-11-01', 46293.0, 371087.0, 1113.84, 1842.12, 328455.38],
+                          ['2023-11-01', 46293.0, 371087.0, 11"A4"4, 1842.12, 328455.38],
                           ['2023-12-01', 53072.0, 434993.0, 1362.06, 2055.06, 436850.05]]
 
 size_campus_centro = data_size(table_uc_campus_centro)

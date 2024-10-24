@@ -33,7 +33,7 @@ class TestCheckEnergyBillCoveredByContract:
             consumer_unit=self.consumer_unit,
             start_date=datetime.strptime('2024-01-01', '%Y-%m-%d').date(),
             end_date=datetime.strptime('2024-01-31', '%Y-%m-%d').date(),
-            supply_voltage=100.00,
+            subgroup='A2',
             distributor=self.distributor
         )
 
@@ -41,7 +41,7 @@ class TestCheckEnergyBillCoveredByContract:
             consumer_unit=self.consumer_unit,
             start_date=datetime.strptime('2024-02-01', '%Y-%m-%d').date(),
             end_date=datetime.strptime('2024-02-28', '%Y-%m-%d').date(),
-            supply_voltage=100.00,
+            subgroup='A2',
             distributor=self.distributor
         )
 
@@ -55,7 +55,7 @@ class TestCheckEnergyBillCoveredByContract:
             consumer_unit=self.consumer_unit,
             start_date=datetime.strptime('2024-01-01', '%Y-%m-%d').date(),
             end_date=datetime.strptime('2024-01-31', '%Y-%m-%d').date(),
-            supply_voltage=100.00,
+            subgroup='A2',
             distributor=self.distributor
         )
 
@@ -63,7 +63,7 @@ class TestCheckEnergyBillCoveredByContract:
             consumer_unit=self.consumer_unit,
             start_date=datetime.strptime('2024-02-01', '%Y-%m-%d').date(),
             end_date=datetime.strptime('2024-02-28', '%Y-%m-%d').date(),
-            supply_voltage=100.00,
+            subgroup='A2',
             distributor=self.distributor
         )
 
@@ -78,7 +78,7 @@ class TestCheckEnergyBillCoveredByContract:
             consumer_unit=self.consumer_unit,
             start_date=datetime.strptime('2024-01-01', '%Y-%m-%d').date(),
             end_date=datetime.strptime('2024-01-31', '%Y-%m-%d').date(),
-            supply_voltage=100.00,
+            subgroup='A2',
             distributor=self.distributor
         )
 
@@ -86,7 +86,7 @@ class TestCheckEnergyBillCoveredByContract:
             consumer_unit=self.consumer_unit,
             start_date=datetime.strptime('2024-02-01', '%Y-%m-%d').date(),
             end_date=datetime.strptime('2024-02-28', '%Y-%m-%d').date(),
-            supply_voltage=100.00,
+            subgroup='A2',
             distributor=self.distributor
         )
 

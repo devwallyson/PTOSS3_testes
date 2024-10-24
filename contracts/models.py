@@ -28,10 +28,6 @@ class ContractManager(models.Manager):
 class Contract(models.Model):
     objects = ContractManager()
 
-    def save(self, *args, **kwargs):
-        self.subgroup = Subgroup.get_subgroup(self.supply_voltage)
-        super().save(*args, **kwargs)
-
     tariff_flag_choices = (
         ('G', 'Verde'),
         ('B', 'Azul'),
@@ -70,13 +66,6 @@ class Contract(models.Model):
         max_length=3,
         null=True,
         blank=True
-    )
-
-    supply_voltage = models.DecimalField(
-        decimal_places=2,
-        max_digits=10,
-        null=False,
-        blank=False
     )
 
     peak_contracted_demand_in_kw = models.DecimalField(
