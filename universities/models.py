@@ -164,7 +164,6 @@ class ConsumerUnit(models.Model):
                 distributor_id=data_contract['distributor'],
                 start_date=data_contract['start_date'],
                 tariff_flag=data_contract['tariff_flag'],
-                supply_voltage=data_contract['supply_voltage'],
                 peak_contracted_demand_in_kw=data_contract['peak_contracted_demand_in_kw'],
                 off_peak_contracted_demand_in_kw=data_contract['off_peak_contracted_demand_in_kw'],
             )
@@ -202,8 +201,7 @@ class ConsumerUnit(models.Model):
             contract.distributor_id = data_contract['distributor']
             contract.start_date = datetime.strptime(data_contract['start_date'], '%Y-%m-%d').date()
             contract.tariff_flag = data_contract['tariff_flag']
-            contract.supply_voltage = data_contract['supply_voltage']
-            contract.subgroup = Subgroup.get_subgroup(data_contract['supply_voltage'])
+            contract.subgroup = data_contract['subgroup']
             contract.peak_contracted_demand_in_kw = data_contract['peak_contracted_demand_in_kw']
             contract.off_peak_contracted_demand_in_kw = data_contract['off_peak_contracted_demand_in_kw']
 
@@ -232,7 +230,7 @@ class ConsumerUnit(models.Model):
                 distributor_id=data_contract['distributor'],
                 start_date=data_contract['start_date'],
                 tariff_flag=data_contract['tariff_flag'],
-                supply_voltage=data_contract['supply_voltage'],
+                subgroup=data_contract['subgroup'],
                 peak_contracted_demand_in_kw=data_contract['peak_contracted_demand_in_kw'],
                 off_peak_contracted_demand_in_kw=data_contract['off_peak_contracted_demand_in_kw'],
             )

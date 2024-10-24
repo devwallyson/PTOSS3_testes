@@ -25,7 +25,7 @@ def create_test_contract(dict: dict, distributor: Distributor, consumer_unit: Co
     contract = Contract.objects.create(
         start_date = dict['start_date'],
         tariff_flag = dict['tariff_flag'],
-        supply_voltage = dict['supply_voltage'],
+        subgroup = dict['subgroup'],
         peak_contracted_demand_in_kw = dict['peak_contracted_demand_in_kw'],
         off_peak_contracted_demand_in_kw = dict['off_peak_contracted_demand_in_kw'],
         distributor = distributor,

@@ -7,7 +7,7 @@ from contracts.validators import CsvFileValidator
 
 class ContractSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    subgroup = serializers.CharField(read_only=True)
+    subgroup = serializers.CharField()
     end_date = serializers.DateField(read_only=True)
 
     consumer_unit = serializers.PrimaryKeyRelatedField(
@@ -18,7 +18,7 @@ class ContractSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Contract
         fields = fields = ['url', 'id', 'consumer_unit', 'distributor', 'start_date', 'end_date', 'tariff_flag',
-                           'subgroup', 'supply_voltage', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
+                           'subgroup', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
 
 
 class ContractListSerializer(serializers.HyperlinkedModelSerializer):
@@ -35,7 +35,7 @@ class ContractListSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Contract
         fields = fields = ['url', 'id', 'consumer_unit', 'distributor', 'distributor_name', 'start_date', 'end_date', 'tariff_flag',
-                           'subgroup', 'supply_voltage', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
+                           'subgroup', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
 
 
 class EnergyBillSerializer(serializers.HyperlinkedModelSerializer):

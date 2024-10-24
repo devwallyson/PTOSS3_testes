@@ -134,7 +134,7 @@ contract_campus_darcy = Contract.objects.create(
     consumer_unit=uc_campus_darcy,
     distributor=distributor_neoenergia,
     start_date=date(2022,11,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=1000,
     off_peak_contracted_demand_in_kw=1680,
 )
@@ -151,7 +151,7 @@ contract_campus_ceilandia = Contract.objects.create(
     consumer_unit=uc_campus_ceilandia,
     distributor=distributor_neoenergia,
     start_date=date(2022,11,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=1000,
     off_peak_contracted_demand_in_kw=1680,
 )
@@ -168,7 +168,7 @@ contract_campus_planaltina = Contract.objects.create(
     consumer_unit=uc_campus_planaltina,
     distributor=distributor_neoenergia,
     start_date=date(2022,9,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=300,
     off_peak_contracted_demand_in_kw=300,
 )
@@ -185,7 +185,7 @@ contract_campus_gama = Contract.objects.create(
     consumer_unit=uc_campus_gama,
     distributor=distributor_neoenergia,
     start_date=date(2022,8,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=100,
     off_peak_contracted_demand_in_kw=250,
 )
@@ -202,7 +202,7 @@ contract_fazenda_agua_limpa = Contract.objects.create(
     consumer_unit=uc_fazenda_agua_limpa,
     distributor=distributor_neoenergia,
     start_date=date(2022,8,1),
-    supply_voltage=69,
+    subgroup="A3",
     peak_contracted_demand_in_kw=100,
     off_peak_contracted_demand_in_kw=250,
 )
@@ -219,7 +219,7 @@ contract_estacao = Contract.objects.create(
     consumer_unit=uc_estacao,
     distributor=distributor_ceb,
     start_date=date(2022,3,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=100,
     off_peak_contracted_demand_in_kw=250,
 )
