@@ -8,9 +8,18 @@ from .models import University
 
 
 class CustomUserSerializer(HyperlinkedModelSerializer):
+    university_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_university_name(self, obj):
+        try:
+            university_user = UniversityUser.objects.get(pk=obj.pk)
+            return f'{university_user.university.acronym} - {university_user.university.name}' if university_user.university else None
+        except UniversityUser.DoesNotExist:
+            return None
+
     class Meta:
         model = CustomUser
-        fields = ['id', 'url', 'first_name', 'last_name', 'password',
+        fields = ['id', 'url', 'first_name', 'last_name', 'university_name', 'password',
                   'email', 'type', 'account_password_status',
                   'have_reset_password_token_enable', 'created_on']
         extra_kwargs = {'password': {'write_only': True, 'required': False}}

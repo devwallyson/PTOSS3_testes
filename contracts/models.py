@@ -28,10 +28,6 @@ class ContractManager(models.Manager):
 class Contract(models.Model):
     objects = ContractManager()
 
-    def save(self, *args, **kwargs):
-        self.subgroup = Subgroup.get_subgroup(self.supply_voltage)
-        super().save(*args, **kwargs)
-
     tariff_flag_choices = (
         ('G', 'Verde'),
         ('B', 'Azul'),
@@ -72,13 +68,6 @@ class Contract(models.Model):
         blank=True
     )
 
-    supply_voltage = models.DecimalField(
-        decimal_places=2,
-        max_digits=10,
-        null=False,
-        blank=False
-    )
-
     peak_contracted_demand_in_kw = models.DecimalField(
         decimal_places=2,
         max_digits=10,
@@ -92,6 +81,9 @@ class Contract(models.Model):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return f"{self.distributor.name} - {self.distributor.university.acronym} ({self.start_date})"
 
     @classmethod
     def check_is_valid_peak_demand_values(cls, peak_contracted_demand_in_kw, off_peak_contracted_demand_in_kw):
@@ -239,6 +231,9 @@ class EnergyBill(models.Model):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return f"{self.consumer_unit} - {self.date}"
 
     @classmethod
     def get_energy_bill(cls, consumer_unit_id, month, year):

@@ -1,7 +1,7 @@
 from pathlib import Path
 
-
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
+LOG_DIR = BASE_DIR / "logs"
 
 DEBUG = True
 ALLOWED_HOSTS = []
@@ -24,6 +24,7 @@ EXTERNAL_APPS = [
     "drf_yasg",
     "rest_framework",
     "rest_framework.authtoken",
+    "easyaudit",
 ]
 
 LOCAL_APPS = [
@@ -68,6 +69,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "easyaudit.middleware.easyaudit.EasyAuditMiddleware",
 ]
 
 
@@ -133,6 +135,78 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
     ),
 }
+
+
+# EASYAUDIT
+# ------------------------------------------------------------------------------------------------
+
+DJANGO_EASY_AUDIT_WATCH_MODEL_EVENTS = True  # Registra os eventos de modelo (criação, atualização e exclusão)
+DJANGO_EASY_AUDIT_WATCH_AUTH_EVENTS = True  # Registra eventos de autenticação do usuário (login, logout, falhas)
+DJANGO_EASY_AUDIT_WATCH_REQUEST_EVENTS = True  # Registra todas as requisições  ()
+
+# LOGGING
+# ------------------------------------------------------------------------------------------------
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "simple": {
+            "format": "%(levelname)-8s: %(message)s",
+        },
+        "middle": {
+            "format": "%(module)-12s: [line: %(lineno)-3s] %(message)s",
+            "datefmt": "%d-%m-%Y %H:%M:%S",
+        },
+        "verbose": {
+            "format": "%(asctime)-15s | %(levelname)-8s | %(filename)-15s | line:%(lineno)-3s | %(message)s",
+            "datefmt": "%d-%m-%Y %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "django_logfile": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "django.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 5,  # 5 files = 50MB total
+            "formatter": "verbose",
+        },
+        "apps_logfile": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "apps.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 5,  # 5 files = 50MB total
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "django_logfile"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console", "django_logfile"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["django_logfile"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "apps": {
+            "handlers": ["console", "apps_logfile"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
 
 # MEC ENERGIA
 # ------------------------------------------------------------------------------------------------

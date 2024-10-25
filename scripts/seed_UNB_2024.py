@@ -113,7 +113,7 @@ contract_453683 = Contract.objects.create(
     consumer_unit=uc_453683,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=150.0,
     off_peak_contracted_demand_in_kw=150.0,
 )
@@ -146,7 +146,7 @@ contract_1417666 = Contract.objects.create(
     consumer_unit=uc_1417666,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=2850.0,
     off_peak_contracted_demand_in_kw=4000.0,
 )
@@ -179,7 +179,7 @@ contract_886483 = Contract.objects.create(
     consumer_unit=uc_886483,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=35.0,
     off_peak_contracted_demand_in_kw=35.0,
 )
@@ -212,7 +212,7 @@ contract_1511891 = Contract.objects.create(
     consumer_unit=uc_1511891,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=90.0,
     off_peak_contracted_demand_in_kw=90.0,
 )
@@ -245,7 +245,7 @@ contract_1042178 = Contract.objects.create(
     consumer_unit=uc_1042178,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=150.0,
     off_peak_contracted_demand_in_kw=150.0,
 )
@@ -278,7 +278,7 @@ contract_12451274 = Contract.objects.create(
     consumer_unit=uc_12451274,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=140.0,
     off_peak_contracted_demand_in_kw=140.0,
 )
@@ -311,7 +311,7 @@ contract_1007165 = Contract.objects.create(
     consumer_unit=uc_1007165,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=150.0,
     off_peak_contracted_demand_in_kw=150.0,
 )
@@ -344,7 +344,7 @@ contract_454523 = Contract.objects.create(
     consumer_unit=uc_454523,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=65.0,
     off_peak_contracted_demand_in_kw=65.0,
 )
@@ -377,7 +377,7 @@ contract_1258045 = Contract.objects.create(
     consumer_unit=uc_1258045,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=30.0,
     off_peak_contracted_demand_in_kw=30.0,
 )
@@ -410,7 +410,7 @@ contract_625205 = Contract.objects.create(
     consumer_unit=uc_625205,
     distributor=distributor_neoenergia,
     start_date=date(2022,1,1),
-    supply_voltage=13.8,
+    subgroup="A4",
     peak_contracted_demand_in_kw=95.0,
     off_peak_contracted_demand_in_kw=95.0,
 )
