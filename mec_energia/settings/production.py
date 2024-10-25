@@ -17,6 +17,10 @@ ENVIRONMENT = env("ENVIRONMENT")
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", False)
 
+LOG_LEVEL = env("LOG_LEVEL", default="ERROR")
+LOGGING['loggers']['django']['level'] = LOG_LEVEL
+LOGGING['loggers']['apps']['level'] = LOG_LEVEL
+
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS")
 CORS_ORIGIN_ALLOW_ALL = False

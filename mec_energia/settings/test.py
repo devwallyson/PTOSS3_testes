@@ -15,6 +15,9 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", True)
 TEST = env.bool("IS_TESTING", default=False)
 
+LOG_LEVEL = env("LOG_LEVEL", default="INFO")
+LOGGING['loggers']['apps']['level'] = LOG_LEVEL
+
 ALLOWED_HOSTS = env.list(
     "DJANGO_ALLOWED_HOSTS",
     default=["mepa-api", "localhost", "127.0.0.1", "[::1]"],
