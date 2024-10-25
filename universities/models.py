@@ -47,6 +47,9 @@ class University(models.Model):
         auto_now_add=True
     )
 
+    def __str__(self):
+        return f"{self.acronym} - {self.name}"
+
 
 class ConsumerUnit(models.Model):
     name = models.CharField(
@@ -93,6 +96,9 @@ class ConsumerUnit(models.Model):
 
     class Meta:
         unique_together = ['university', 'name', 'code']
+
+    def __str__(self):
+        return f"{self.name} - {self.code}"
 
     @property
     def current_contract(self) -> Contract:

@@ -82,6 +82,9 @@ class Contract(models.Model):
         blank=True
     )
 
+    def __str__(self):
+        return f"{self.distributor.name} - {self.distributor.university.acronym} ({self.start_date})"
+
     @classmethod
     def check_is_valid_peak_demand_values(cls, peak_contracted_demand_in_kw, off_peak_contracted_demand_in_kw):
         if peak_contracted_demand_in_kw < 30 or off_peak_contracted_demand_in_kw < 30:
@@ -228,6 +231,9 @@ class EnergyBill(models.Model):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return f"{self.consumer_unit} - {self.date}"
 
     @classmethod
     def get_energy_bill(cls, consumer_unit_id, month, year):
