@@ -117,9 +117,9 @@ class CustomUser(AbstractUser):
     )
 
     email = models.EmailField(
-        _('Email is required'),
+        _("Email"),
         unique=True,
-        null=False
+        null=False,
     )
 
     type = models.CharField(
@@ -144,16 +144,18 @@ class CustomUser(AbstractUser):
         choices=password_status
     )
 
+    created_on = models.DateTimeField(auto_now_add=True)
+
     @property
     def have_reset_password_token_enable(self) -> bool:
         return UserToken.get_enable_user_token_by_user(user = self)
 
-    def __str__(self):
-        return f'Token for {self.user.username}'
+    class Meta:
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
 
-    created_on = models.DateTimeField(
-        auto_now_add=True
-    )
+    def __str__(self):
+        return self.email
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -218,6 +220,13 @@ class UniversityUser(CustomUser):
         help_text=_(
             'Um Usuário de Universidade deve estar ligado a uma Universidade')
     )
+
+    class Meta:
+        verbose_name = _("University User")
+        verbose_name_plural = _("University Users")
+
+    def __str__(self):
+        return self.email
 
     def add_or_remove_favorite_consumer_unit(self, consumer_unit_id: int | str, action: str):
         unit = ConsumerUnit.objects.get(pk=consumer_unit_id)

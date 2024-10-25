@@ -40,6 +40,9 @@ class Distributor(models.Model):
     class Meta:
         unique_together = ['university', 'cnpj']
 
+    def __str__(self):
+        return self.name
+
     @property
     def consumer_units_count(self) -> int:
         return len(self.get_consumer_units())
@@ -231,6 +234,9 @@ class Tariff(models.Model):
 
     class Meta:
         unique_together = ['subgroup', 'distributor', 'flag']
+
+    def __str__(self):
+        return f"{self.distributor.name}"
 
     start_date = models.DateField(
         null=False,
