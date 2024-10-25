@@ -18,6 +18,10 @@ ALLOWED_HOSTS = ["mepa-api", "localhost", "127.0.0.1", "0.0.0.0", "[::1]"]
 CSRF_TRUSTED_ORIGINS = ["http://mepa-web:3000", "http://localhost:3000"]
 CORS_ALLOW_ALL_ORIGINS = True
 
+LOG_LEVEL = env("LOG_LEVEL", default="DEBUG")
+LOGGING['loggers']['apps']['level'] = LOG_LEVEL
+
+
 
 # DATABASES
 # ------------------------------------------------------------------------------------------------
