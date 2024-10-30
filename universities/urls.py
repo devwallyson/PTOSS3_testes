@@ -6,4 +6,3 @@ router = routers.DefaultRouter()
 
 router.register('universities', UniversityViewSet)
 router.register('consumer-units', ConsumerUnitViewSet)
-

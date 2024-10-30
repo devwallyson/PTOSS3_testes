@@ -1,12 +1,11 @@
+from datetime import date, datetime
 from django.db import models, transaction
 from django.core.exceptions import ObjectDoesNotExist
-from datetime import date, datetime
+from django.core.validators import FileExtensionValidator
 
 from utils.subgroup_util import Subgroup
 from utils.date_util import DateUtils
 from utils.energy_bill_util import EnergyBillUtils
-
-from django.core.validators import FileExtensionValidator
 
 
 class ContractManager(models.Manager):
@@ -21,7 +20,7 @@ class ContractManager(models.Manager):
                 obj.set_last_contract_end_date()
             except Exception as e:
                 raise e
-            
+
             return obj
 
 
@@ -93,7 +92,8 @@ class Contract(models.Model):
     def check_start_date_create_contract(self):
         if self.consumer_unit.current_contract:
             if self.start_date <= self.consumer_unit.current_contract.start_date:
-                raise Exception(self.start_date, self.consumer_unit.current_contract.start_date, 'Novo Contrato não pode ter uma data anterior ou igual ao Contrato atual')
+                raise Exception(self.start_date, self.consumer_unit.current_contract.start_date,
+                                'Novo Contrato não pode ter uma data anterior ou igual ao Contrato atual')
 
     def check_start_date_edit_contract(self):
         if self.consumer_unit.previous_contract:
@@ -103,7 +103,7 @@ class Contract(models.Model):
 
     def check_start_date_is_valid(self):
         if self.end_date:
-            return 
+            return
 
         consumer_unit = self.consumer_unit
 
@@ -146,7 +146,7 @@ class EnergyBill(models.Model):
 
         if not EnergyBillUtils.check_valid_consumption_demand(self):
             raise Exception('O campo de consumo e demanda não pode ser 0.')
-        
+
         existing_energy_bill = EnergyBill.objects.filter(
             consumer_unit = self.consumer_unit,
             date__year = self.date.year,
@@ -249,18 +249,16 @@ class EnergyBill(models.Model):
         except Exception as error:
             raise Exception('Get Energy Bill: ' + str(error))
 
-    def check_energy_bill_month_year(consumer_unit_id, date):
+    @classmethod
+    def check_energy_bill_month_year(cls, consumer_unit_id, energy_bill_date):
         has_already_energy_bill = EnergyBill.objects.filter(
             consumer_unit=consumer_unit_id,
-            date__year=date.year,
-            date__month=date.month).exists()
+            date__year=energy_bill_date.year,
+            date__month=energy_bill_date.month).exists()
 
-        if has_already_energy_bill:
-            return True
-        else:
-            return False
+        return has_already_energy_bill
 
-    def check_energy_bill_covered_by_contract(consumer_unit_id, date):
+    def check_energy_bill_covered_by_contract(consumer_unit_id, energy_bill_date):
         oldest_contract = Contract.objects.filter(
             consumer_unit=consumer_unit_id
         ).order_by('start_date').first()
@@ -270,7 +268,7 @@ class EnergyBill(models.Model):
         ).order_by('-start_date').first()
 
         if oldest_contract and latest_contract:
-            if date >= oldest_contract.start_date or date >= latest_contract.start_date:
+            if energy_bill_date >= oldest_contract.start_date or energy_bill_date >= latest_contract.start_date:
                 return True, None
 
             return False, max(oldest_contract.start_date, latest_contract.start_date)

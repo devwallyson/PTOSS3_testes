@@ -47,7 +47,7 @@ class UniversityViewSet(CachedViewSetMixin, ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.super_user_permissions
 
         try:
@@ -151,7 +151,7 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
         return Response(consumer_units, status.HTTP_200_OK)
 
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, *args, pk=None, **kwargs):
         user_types_with_permission = RequestsPermissions.default_users_permissions
         queryset = self.get_object()
 
@@ -180,7 +180,7 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
 
     @swagger_auto_schema(request_body=serializers.CreateConsumerUnitAndContractSerializerForDocs)
     @action(detail=False, methods=["post"])
-    def create_consumer_unit_and_contract(self, request, pk=None):
+    def create_consumer_unit_and_contract(self, request):
         user_types_with_permission = RequestsPermissions.university_user_permissions
         data = request.data
 
@@ -196,7 +196,7 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
         try:
-            created_uc, created_contract = ConsumerUnit.create_consumer_unit_and_contract(data["consumer_unit"], data["contract"])
+            created_uc, _ = ConsumerUnit.create_consumer_unit_and_contract(data["consumer_unit"], data["contract"])
 
             serializer = serializers.ConsumerUnitSerializer(created_uc, context={'request': request})
 
@@ -205,13 +205,12 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
             )
 
             return Response(serializer.data, status.HTTP_201_CREATED)
-
         except Exception as error:
-            raise Exception(str(error))
+            raise Exception(str(error)) from error
 
     @swagger_auto_schema(request_body=serializers.CreateConsumerUnitAndContractSerializerForDocs)
     @action(detail=False, methods=["post"])
-    def edit_consumer_unit_and_contract(self, request, pk=None):
+    def edit_consumer_unit_and_contract(self, request):
         user_types_with_permission = RequestsPermissions.university_user_permissions
 
         data = request.data
@@ -239,7 +238,7 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
 
     @swagger_auto_schema(request_body=serializers.EditConsumerUnitCodeAndCreateContractSerializerForDocs)
     @action(detail=False, methods=["post"])
-    def edit_consumer_unit_code_and_create_contract(self, request, pk=None):
+    def edit_consumer_unit_code_and_create_contract(self, request):
         user_types_with_permission = RequestsPermissions.university_user_permissions
 
         data = request.data

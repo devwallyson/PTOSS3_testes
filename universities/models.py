@@ -1,16 +1,13 @@
-from django.db import models, transaction
-from django.utils.translation import gettext_lazy as _
-from django.forms.models import model_to_dict
-
 from datetime import datetime, date
-
-from .recommendation import Recommendation
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from contracts.models import Contract, EnergyBill
 
 from utils.energy_bill_util import EnergyBillUtils
 from utils.subgroup_util import Subgroup
 
+from .recommendation import Recommendation
 
 class University(models.Model):
     name = models.CharField(
@@ -84,7 +81,7 @@ class ConsumerUnit(models.Model):
         decimal_places=2,
         max_digits=7,
         null=True,
-        blank=True, 
+        blank=True,
         help_text=_(
             'Potência total de geração de energia instalada em kw'
         )
@@ -107,12 +104,12 @@ class ConsumerUnit(models.Model):
     @property
     def oldest_contract(self) -> Contract:
         return self.contract_set.all().order_by('start_date').first()
-    
+
     @property
     def previous_contract(self) -> Contract:
         if self.current_contract is None:
             return None
-        
+
         return self.contract_set.filter(start_date__lt=self.current_contract.start_date).order_by('start_date').last()
 
     @property
@@ -155,8 +152,9 @@ class ConsumerUnit(models.Model):
         created_consumer_unit = None
 
         try:
-            Contract.check_is_valid_peak_demand_values(data_contract['peak_contracted_demand_in_kw'], data_contract['off_peak_contracted_demand_in_kw'])
-            
+            Contract.check_is_valid_peak_demand_values(data_contract['peak_contracted_demand_in_kw'],
+                                                       data_contract['off_peak_contracted_demand_in_kw'])
+
             created_consumer_unit = ConsumerUnit(
                 university_id=data_consumer_unit['university'],
                 name=data_consumer_unit['name'],
@@ -174,8 +172,7 @@ class ConsumerUnit(models.Model):
                 off_peak_contracted_demand_in_kw=data_contract['off_peak_contracted_demand_in_kw'],
             )
         except Exception as error:
-            raise Exception(
-                'error create consumer unit and contract: ' + str(error))
+            raise Exception('error create consumer unit and contract: ' + str(error)) from error
 
         created_consumer_unit.save()
         created_contract.save()
@@ -185,25 +182,26 @@ class ConsumerUnit(models.Model):
     @classmethod
     def edit_consumer_unit_and_contract(cls, data_consumer_unit, data_contract):
         try:
-            Contract.check_is_valid_peak_demand_values(data_contract['peak_contracted_demand_in_kw'], data_contract['off_peak_contracted_demand_in_kw'])
+            Contract.check_is_valid_peak_demand_values(data_contract['peak_contracted_demand_in_kw'],
+                                                       data_contract['off_peak_contracted_demand_in_kw'])
 
             consumer_unit = ConsumerUnit.objects.get(id=data_consumer_unit['consumer_unit_id'])
 
             if not consumer_unit:
                 raise Exception('Consumer Unit not exist')
-            
+
             consumer_unit.name = data_consumer_unit['name']
             consumer_unit.code = data_consumer_unit['code']
             consumer_unit.is_active = data_consumer_unit['is_active']
             consumer_unit.total_installed_power = data_consumer_unit['total_installed_power']
 
             consumer_unit.save()
- 
+
             contract = Contract.objects.get(id=data_contract['contract_id'])
 
             if not contract:
                 raise Exception('Contract not exist')
-            
+
             contract.distributor_id = data_contract['distributor']
             contract.start_date = datetime.strptime(data_contract['start_date'], '%Y-%m-%d').date()
             contract.tariff_flag = data_contract['tariff_flag']
@@ -215,18 +213,18 @@ class ConsumerUnit(models.Model):
             contract.check_tariff_flag_is_valid()
 
             contract.save()
-            
+
         except Exception as error:
-            raise Exception(
-                'error edit consumer unit and contract: ' + str(error))
+            raise Exception('error edit consumer unit and contract: ' + str(error)) from error
 
         return consumer_unit, contract
 
     @classmethod
     def edit_consumer_unit_code_and_create_contract(cls, data_consumer_unit, data_contract):
         try:
-            Contract.check_is_valid_peak_demand_values(data_contract['peak_contracted_demand_in_kw'], data_contract['off_peak_contracted_demand_in_kw'])
-            
+            Contract.check_is_valid_peak_demand_values(data_contract['peak_contracted_demand_in_kw'],
+                                                       data_contract['off_peak_contracted_demand_in_kw'])
+
             consumer_unit = ConsumerUnit.objects.filter(id=data_consumer_unit['consumer_unit_id']).update(
                 code=data_consumer_unit['code'],
             )
@@ -241,18 +239,11 @@ class ConsumerUnit(models.Model):
                 off_peak_contracted_demand_in_kw=data_contract['off_peak_contracted_demand_in_kw'],
             )
         except Exception as error:
-            raise Exception(
-                'error create consumer unit and contract: ' + str(error))
+            raise Exception('error create consumer unit and contract: ' + str(error)) from error
 
         created_contract.save()
 
         return consumer_unit, created_contract
-    
-    def check_if_consumer_unit_has_contract(self):
-        try:
-            contract = self.current_contract
-        except Exception:
-            raise Exception('Unidade Consumidora sem Contrato ou Contrato com erro')
 
     def get_energy_bills_by_year(self, year):
         if year < self.date.year or year > date.today().year:
@@ -260,16 +251,16 @@ class ConsumerUnit(models.Model):
 
         energy_bills_dates = EnergyBillUtils.generate_dates_by_year(year)
 
-        for object in energy_bills_dates:
-            object['energy_bill'] = None
+        for energy_bill_date in energy_bills_dates:
+            energy_bill_date['energy_bill'] = None
 
             energy_bill = EnergyBill.get_energy_bill(
                 self.id,
-                object['month'],
-                object['year'])
+                energy_bill_date['month'],
+                energy_bill_date['year'])
 
             if energy_bill:
-                object['energy_bill'] = EnergyBillUtils.energy_bill_dictionary(
+                energy_bill_date['energy_bill'] = EnergyBillUtils.energy_bill_dictionary(
                     energy_bill)
 
         return list(energy_bills_dates)
@@ -283,7 +274,7 @@ class ConsumerUnit(models.Model):
             energy_bill_date = date(energy_bill['year'], energy_bill['month'], 1)
 
             if energy_bill_date >= self.oldest_contract.start_date:
-                if energy_bill['energy_bill'] == None:
+                if energy_bill['energy_bill'] is None:
                     energy_bills_pending.append(energy_bill)
 
         return list(energy_bills_pending)

@@ -25,7 +25,6 @@ variables:
     - pip install -U -r requirements.txt
   variables:
     DJANGO_SETTINGS_MODULE: mec_energia.settings.test
-  retry: 2
 
 # Written like this to facilitate reuse later.
 .kaniko-build:
@@ -68,7 +67,16 @@ lint:
   stage: lint
   extends: .base-python
   script:
-    - python -m pylint --load-plugins pylint_django .
+    - |
+      pylint_output=$(python -m pylint --load-plugins pylint_django .)
+      pylint_score=$(echo "$pylint_output" | grep -o "rated at [0-9]*\.[0-9]*/10" | grep -o "[0-9]*\.[0-9]*")
+      echo "$pylint_output"  # Exibe a saída completa do pylint
+      if (( $(echo "$pylint_score < 8.0" | bc -l) )); then
+        echo "Pylint score is below 8.0: $pylint_score"
+        exit 1
+      else
+        echo "Pylint score is $pylint_score, which is acceptable."
+      fi
 
 unit-test:
   stage: test
