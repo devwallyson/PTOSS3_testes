@@ -28,7 +28,8 @@ class ConsumerUnitSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = ConsumerUnit
-        fields = ['id', 'url', 'name', 'code', 'is_active', 'date', 'is_current_energy_bill_filled', 'pending_energy_bills_number', 'university', 'total_installed_power', 'created_on']
+        fields = ['id', 'url', 'name', 'code', 'is_active', 'date', 'is_current_energy_bill_filled',
+                  'pending_energy_bills_number', 'university', 'total_installed_power', 'created_on']
 
 
 class ListConsumerUnitSerializerForDocs(ConsumerUnitSerializer):
@@ -36,7 +37,8 @@ class ListConsumerUnitSerializerForDocs(ConsumerUnitSerializer):
 
     class Meta:
         model = ConsumerUnit
-        fields = ['id', 'url', 'name', 'code', 'is_active', 'date', 'pending_energy_bills_number', 'university', 'created_on', 'is_current_energy_bill_filled', 'is_favorite']
+        fields = ['id', 'url', 'name', 'code', 'is_active', 'date', 'pending_energy_bills_number',
+                  'university', 'created_on', 'is_current_energy_bill_filled', 'is_favorite']
 
 
 class ConsumerUnitParamsSerializer(serializers.Serializer):

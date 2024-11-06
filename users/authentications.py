@@ -12,15 +12,16 @@ from drf_yasg.utils import swagger_auto_schema
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.tokens import default_token_generator
 
-from . import serializers
-from .requests_permissions import RequestsPermissions
-
 from utils.user.user_type_util import UserType
 from utils.endpoints_util import EndpointsUtils
 from utils.user.authentication import create_token_response, create_valid_token_response, generate_link_to_reset_password, generate_random_password
 from utils.email.send_email import send_email_first_access_password, send_email_reset_password, send_email_reset_password_by_admin
 
 from users.models import UserToken, CustomUser
+
+from . import serializers
+from .requests_permissions import RequestsPermissions
+
 
 class Authentication(ObtainAuthToken):
 
@@ -35,7 +36,7 @@ class Authentication(ObtainAuthToken):
 
             if not user.account_password_status in ['OK', 'user_reset']:
                 raise Exception('Usuário não pode fazer login no sistema')
-            
+
             try:
                 existing_token = Token.objects.get(user=user)
                 existing_token.delete()
@@ -71,7 +72,7 @@ class Authentication(ObtainAuthToken):
         response = create_valid_token_response(is_valid_token)
 
         return Response(response)
-    
+
     def _invalid_sessions_tokens(user):
         sessions_tokens = Token.objects.filter(user=user)
 
@@ -94,7 +95,7 @@ class Authentication(ObtainAuthToken):
 
     def _update_university_user_response(response, university_id):
         response = Authentication._insert_university_id_on_response(response, university_id)
-        
+
         return response
 
     def _insert_university_id_on_response(response, university_id):
@@ -122,7 +123,7 @@ class Logout(APIView):
 class Password():
     def generate_password_token(user):
         Password._invalid_all_generated_password_tokens(user)
-        
+
         token = default_token_generator.make_token(user = user)
         UserToken.objects.create(user = user, token = token)
 
@@ -149,17 +150,17 @@ class Password():
             Password._invalid_all_generated_password_tokens(user)
         except Exception as error:
             raise Exception('Change user password: ' + str(error))
-    
+
     def _get_user_by_token(token):
         return UserToken.get_user_by_token(token)
 
     def _invalid_all_generated_password_tokens(user):
         UserToken.objects.filter(user=user).delete()
-    
+
     def send_email_reset_password_by_admin(email):
         try:
             user = CustomUser.search_user_by_email(email = email)
-            
+
             user.account_password_status = 'admin_reset'
             user.save()
 
@@ -169,7 +170,7 @@ class Password():
 
             token = Password.generate_password_token(user)
             link = Password.generate_link_to_reset_password(user, token, 'admin_reset')
-            
+
             send_email_reset_password_by_admin(user.first_name, user.email, link)
         except Exception as error:
             raise Exception('Send email reset password by admin: ' + str(error))
@@ -183,7 +184,7 @@ class Password():
 
             token = Password.generate_password_token(user)
             link = Password.generate_link_to_reset_password(user, token, 'user_reset')
-            
+
             send_email_reset_password(user.first_name, user.email, link)
         except CustomUser.DoesNotExist:
             pass
@@ -199,7 +200,7 @@ class Password():
 
             token = Password.generate_password_token(user)
             link = Password.generate_link_to_reset_password(user, token, 'first_access')
-            
+
             send_email_first_access_password(user.first_name, user.university.acronym, user.email, link)
         except Exception as error:
             raise Exception('Send email first access password: ' + str(error))
@@ -219,27 +220,27 @@ class ResetPasswordByAdmin(generics.GenericAPIView):
 
         if request_user.id == user_for_reset.id:
             raise Exception('Utilize o esqueci minha senha')
-        
+
         Password.send_email_reset_password_by_admin(user_for_reset.email)
 
         return Response({"message": "Enviado"})
 
 
-code_password_token_ok = 1 # Usuário tem um Password Token válido
-code_password_token_expired = 2 # Email seja agendado com um novo Password Token
+CODE_PASSWORD_TOKEN_OK = 1 # Usuário tem um Password Token válido
+CODE_PASSWORD_TOKEN_EXPIRED = 2 # Email seja agendado com um novo Password Token
 @authentication_classes([])
 @permission_classes([])
 class ResetPassword(generics.GenericAPIView):
     @swagger_auto_schema(query_serializer=serializers.ResetPasswordParamsSerializer,
                          responses={200: serializers.ResetPasswordParamsForDocs})
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         try:
             request_user_email = request.GET.get('email')
 
             Password.send_email_reset_password(request_user_email)
 
             response = EndpointsUtils.create_message_endpoint_response(
-                        status = EndpointsUtils.status_success, 
+                        status = EndpointsUtils.status_success,
                         message = "O email foi enviado para o usuário com link de redefinição de senha")
 
             return Response(response, status.HTTP_200_OK)
@@ -249,20 +250,20 @@ class ResetPassword(generics.GenericAPIView):
                         message = str(error))
 
             return Response(response, status.HTTP_400_BAD_REQUEST)
-    
-    def get(self, request, *args, **kwargs):
+
+    def get(self, request):
         try:
             request_token = request.GET.get('token')
 
             user, code_token = UserToken.get_user_by_token_and_set_invalid_tried(request_token)
-            
+
             response = {
                 "status": EndpointsUtils.status_success,
                 "code": code_token,
-                "message": "Token válido" if code_token == code_password_token_ok else "Novo email será enviado",
+                "message": "Token válido" if code_token == CODE_PASSWORD_TOKEN_OK else "Novo email será enviado",
                 "email": user.email,
             }
-                
+
             return Response(response, status.HTTP_200_OK)
         except Exception as e:
             return Response({"detail": f"Error: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -273,7 +274,7 @@ class ResetPassword(generics.GenericAPIView):
 class ConfirmResetPassword(generics.GenericAPIView):
     @swagger_auto_schema(request_body=serializers.ConfirmPasswordBodySerializer,
                          responses={200: serializers.ResetPasswordParamsForDocs})
-    def post(self, request, *args, **kwargs):
+    def post(self, request):
         try:
             request_user_new_password = request.data['user_new_password']
             request_user_reset_password_token = request.data['user_token']
@@ -281,7 +282,7 @@ class ConfirmResetPassword(generics.GenericAPIView):
             Password.change_user_password(request_user_new_password, request_user_reset_password_token)
 
             response = EndpointsUtils.create_message_endpoint_response(
-                        status = EndpointsUtils.status_success, 
+                        status = EndpointsUtils.status_success,
                         message = "User password has been changed")
 
             return Response(response, status.HTTP_200_OK)

@@ -17,13 +17,13 @@ class UserTokenManager(models.Manager):
         expiration_time = timezone.now() - timedelta(minutes=settings.RESET_PASSWORD_TOKEN_TIMEOUT)
 
         return self.filter(created_at__gt = expiration_time)
-    
+
     def get_user_users_waiting_to_send_email(self):
         expiration_time = timezone.now() - timedelta(minutes=settings.RESEND_EMAIL_RESET_PASSWORD_TIMEOUT)
         tokens = self.filter(invalid_tried_at__lte=expiration_time)
 
         return CustomUser.objects.filter(id__in = tokens.values_list('user_id', flat=True))
-    
+
 
 class UserToken(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -37,12 +37,12 @@ class UserToken(models.Model):
     def is_valid_token(self):
         expiration_time = self.created_at + timedelta(minutes = settings.RESET_PASSWORD_TOKEN_TIMEOUT)
         return timezone.now() < expiration_time
-    
+
     def set_invalid_tried_datetime_to_send_new_email(self):
         if not self.invalid_tried_at:
             self.invalid_tried_at = timezone.now()
             self.save()
-    
+
     @classmethod
     def get_user_by_token(cls, token):
         try:
@@ -54,7 +54,7 @@ class UserToken(models.Model):
             return user_token.user
         except UserToken.DoesNotExist:
             raise Exception('Token inválido')
-        
+
     @classmethod
     def get_user_by_token_and_set_invalid_tried(cls, token):
         from .authentications import code_password_token_expired, code_password_token_ok
@@ -69,7 +69,7 @@ class UserToken(models.Model):
                 return user_token.user, code_password_token_ok
             else:
                 user_token.set_invalid_tried_datetime_to_send_new_email()
-                
+
                 return user_token.user, code_password_token_expired
 
         except UserToken.DoesNotExist:
@@ -83,7 +83,7 @@ class UserToken(models.Model):
 
 class CustomUser(AbstractUser):
     objects = CustomUserManager()
-    
+
     ### User types
     super_user_type = 'super_user'
     university_admin_user_type = 'university_admin'
@@ -107,7 +107,7 @@ class CustomUser(AbstractUser):
     )
 
     username = None
-    
+
     first_name = models.CharField(
         max_length=25
     )
@@ -159,7 +159,7 @@ class CustomUser(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
-        
+
     def change_user_password(self, current_password, new_password):
         if not self.check_password(current_password):
             raise Exception('Erro ao alterar senha: senha atual incorreta')
@@ -189,14 +189,14 @@ class CustomUser(AbstractUser):
 
         try:
             Password._get_user_by_token(reset_password_token)
-            
+
             self.set_password(new_password)
             self.save()
 
             return self
         except Exception as error:
             raise Exception(str(error))
-        
+
     def set_account_password_status_to_ok(self):
         self.account_password_status = 'OK'
         self.save()
@@ -210,7 +210,7 @@ class UniversityUser(CustomUser):
     university_user_type = CustomUser.university_user_type
 
     favorite_consumer_units = models.ManyToManyField(ConsumerUnit, blank=True)
-    
+
     university = models.ForeignKey(
         University,
         blank=False,
@@ -243,27 +243,27 @@ class UniversityUser(CustomUser):
 
     def get_user_favorite_consumer_units(self):
         return self.favorite_consumer_units.all()
-    
+
     def check_if_consumer_unit_is_your_favorite(self, consumer_unit_id):
         favorite_consumer_units = self.get_user_favorite_consumer_units()
 
         if favorite_consumer_units.filter(id = consumer_unit_id):
             return True
-        
+
         return False
 
     def change_university_user_type(self, new_user_type):
         if not new_user_type in CustomUser.university_user_types:
             raise Exception('New University User type does not exist')
-        
+
         if not self.type in CustomUser.university_user_types:
             raise Exception('User is not User University')
-        
+
         if self.type == CustomUser.university_admin_user_type:
             admin_university_users = UniversityUser.objects.all().filter(university = self.university, type = CustomUser.university_admin_user_type)
-            
+
             if len(admin_university_users) == 1:
                 raise Exception('This User is the last Admin University User')
-        
+
         self.type = new_user_type
         self.save()

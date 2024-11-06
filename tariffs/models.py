@@ -1,8 +1,7 @@
+from datetime import date
 from dataclasses import dataclass
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
-
-from datetime import date
 
 from django.utils.translation import gettext_lazy as _
 
@@ -24,7 +23,7 @@ class Distributor(models.Model):
 
     university = models.ForeignKey(
         University,
-        on_delete=models.PROTECT,    
+        on_delete=models.PROTECT,
         null=False,
         blank=False,
     )
@@ -54,20 +53,20 @@ class Distributor(models.Model):
         subgroups = self.get_subgroups_pending()
 
         for subgroup in subgroups:
-            if subgroup['pending'] == True:
+            if subgroup['pending'] is True:
                 count += 1
-        
+
         return count
 
     @property
-    def is_pending(self):        
+    def is_pending(self):
         return True if self.pending_tariffs_count else False
 
     @classmethod
     def get_distributors_pending(cls, university_id):
         distributors = Distributor.objects.filter(university = university_id)
         pending_distributors = distributors
-        
+
         for distributor in distributors:
             if not distributor.is_pending:
                 pending_distributors = pending_distributors.exclude(id = distributor.id)
@@ -84,7 +83,7 @@ class Distributor(models.Model):
             contract__end_date__isnull = True,
             contract__subgroup = subgroup
         )
-        
+
     def get_subgroups(self):
         subgroups = []
 
@@ -102,7 +101,7 @@ class Distributor(models.Model):
         subgroups = self.get_subgroups()
 
         for subgroup in subgroups:
-            is_pending = self.check_subgroups_pending(subgroup)    
+            is_pending = self.check_subgroups_pending(subgroup)
 
             sb = {'subgroup': subgroup, 'pending': is_pending, 'consumer_units': []}
 
@@ -121,8 +120,8 @@ class Distributor(models.Model):
         subgroups = self.get_subgroups()
 
         for subgroup in subgroups:
-            is_pending = self.check_subgroups_pending(subgroup)                  
-            
+            is_pending = self.check_subgroups_pending(subgroup)
+
             sb = {'subgroup': subgroup, 'pending': is_pending}
             subgroup_list.append(sb)
 
@@ -134,7 +133,7 @@ class Distributor(models.Model):
         tariffs = Tariff.objects.filter(distributor = self, flag = Tariff.BLUE, subgroup = subgroup)
 
         for tariff in tariffs:
-            if tariff.pending == True:
+            if tariff.pending is True:
                 is_pending = True
                 break
 
@@ -152,14 +151,13 @@ class Distributor(models.Model):
         except ObjectDoesNotExist:
             return None, None
         except Exception as error:
-            raise Exception({'error': str(error)})
-
+            raise Exception({'error': str(error)}) from error
 
 class DataTariff:
     def is_blue(self):
-        return type(self) == BlueTariff
+        return isinstance(self, BlueTariff)
     def is_green(self):
-        return type(self) == GreenTariff
+        return isinstance(self, GreenTariff)
     def as_blue_tariff(self):
         if not self.is_blue():
             raise Exception('Tariff is green type. Cannot convert to blue')
@@ -209,7 +207,7 @@ class Tariff(models.Model):
     distributor = models.ForeignKey(
         Distributor,
         related_name='tariffs',
-        on_delete=models.CASCADE,    
+        on_delete=models.CASCADE,
         null=False,
         blank=False,
     )
@@ -299,10 +297,10 @@ class Tariff(models.Model):
         max_digits=6,
         default=0
     )
-    
+
     def is_blue(self) -> bool:
         return self.flag == Tariff.BLUE
-    
+
     def is_green(self) -> bool:
         return self.flag == Tariff.GREEN
 
@@ -330,5 +328,3 @@ class Tariff(models.Model):
             na_tusd_in_reais_per_kw=float(self.na_tusd_in_reais_per_kw),
             power_generation_tusd_in_reais_per_kw=float(self.power_generation_tusd_in_reais_per_kw),
         )
-
-

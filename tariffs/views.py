@@ -52,7 +52,8 @@ class DistributorViewSet(CachedViewSetMixin, ModelViewSet):
         blocking_units_ids = []
         for unit in units:
             current_contract = unit.current_contract
-            if current_contract != None:
+
+            if current_contract is not None:
                 if current_contract.distributor.id == distributor.id:
                     blocking_units_ids.append(unit.id)
 
@@ -179,7 +180,7 @@ class TariffViewSet(CachedViewSetMixin, ViewSet):
     cache_timeout = 3600 * 24
 
     @swagger_auto_schema(request_body=BlueAndGreenTariffsSerializer)
-    def create(self, request: Request):
+    def create(self, request: Request, *args, **kwargs):
         ser = BlueAndGreenTariffsSerializer(data=request.data)
         if not ser.is_valid():
             return Response(ser.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -279,10 +280,9 @@ class TariffViewSet(CachedViewSetMixin, ViewSet):
                 "green": green_tariff,
             }
         )
-        
+
         self.delete_view_cache()
         return Response(ser.data)
-
 
 class DownloadPDFViewSet(ViewSet):
     def list(self, request):
