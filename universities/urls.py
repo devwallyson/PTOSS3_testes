@@ -4,5 +4,5 @@ from .views import ConsumerUnitViewSet, UniversityViewSet
 
 router = routers.DefaultRouter()
 
-router.register('universities', UniversityViewSet)
-router.register('consumer-units', ConsumerUnitViewSet)
+router.register("universities", UniversityViewSet)
+router.register("consumer-units", ConsumerUnitViewSet)

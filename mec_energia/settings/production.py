@@ -1,10 +1,7 @@
-# flake8: noqa
-# pylint: skip-file
-
 import environ
 
-from .common import *
-
+from .common import *  # noqa
+from .common import BASE_DIR, LOGGING
 
 env = environ.Env()
 ENV_FILE = BASE_DIR / ".envs" / ".env.prod"
@@ -18,8 +15,8 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DJANGO_DEBUG", False)
 
 LOG_LEVEL = env("LOG_LEVEL", default="ERROR")
-LOGGING['loggers']['django']['level'] = LOG_LEVEL
-LOGGING['loggers']['apps']['level'] = LOG_LEVEL
+LOGGING["loggers"]["django"]["level"] = LOG_LEVEL
+LOGGING["loggers"]["apps"]["level"] = LOG_LEVEL
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS")
@@ -46,7 +43,7 @@ CORS_ALLOW_HEADERS = [
 
 
 # REDIS CACHES
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -59,7 +56,7 @@ SESSION_CACHE_ALIAS = "default"
 
 
 # DATABASES
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -76,7 +73,7 @@ DATABASES["default"]["CONN_MAX_AGE"] = env.int("POSTGRES_CONN_MAX_AGE", default=
 
 
 # MEC ENERGIA
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 MEPA_FRONT_END_URL = env("FRONT_END_URL")
 RECOMMENDATION_METHOD = env("RECOMMENDATION_METHOD")
 

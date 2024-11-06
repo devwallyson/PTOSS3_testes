@@ -1,32 +1,32 @@
 import os
 import re
-from rest_framework.decorators import action
-from rest_framework.viewsets import ModelViewSet, ViewSet
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework import status
-from django.http import FileResponse
-from django.db import IntegrityError
+
 from django.conf import settings
+from django.db import IntegrityError
+from django.http import FileResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet, ViewSet
 
-from utils.endpoints_util import EndpointsUtils
-from utils.tariff_util import response_tariffs_of_distributor
-from utils.mixins.cache_mixin import CachedViewSetMixin
-from users.requests_permissions import RequestsPermissions
 from universities.models import ConsumerUnit
+from users.requests_permissions import RequestsPermissions
+from utils.endpoints_util import EndpointsUtils
+from utils.mixins.cache_mixin import CachedViewSetMixin
+from utils.tariff_util import response_tariffs_of_distributor
 
 from .models import Distributor, Tariff
 from .serializers import (
-    DistributorSerializer,
     BlueAndGreenTariffsSerializer,
     ConsumerUnitsSeparatedBySubgroupSerializerForDocs,
     DistributorListParamsSerializer,
-    GetTariffsOfDistributorParamsSerializer,
+    DistributorSerializer,
     GetTariffsOfDistributorForDocs,
+    GetTariffsOfDistributorParamsSerializer,
 )
 
 
@@ -67,7 +67,6 @@ class DistributorViewSet(CachedViewSetMixin, ModelViewSet):
             )
 
         Distributor.objects.filter(pk=distributor.id).delete()
-
         self.delete_view_cache()
         return Response({}, status=status.HTTP_204_NO_CONTENT)
 
@@ -135,7 +134,6 @@ class DistributorViewSet(CachedViewSetMixin, ModelViewSet):
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
         consumer_units = distributor.get_consumer_units_separated_by_subgroup()
-
         return Response(consumer_units, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -159,7 +157,6 @@ class DistributorViewSet(CachedViewSetMixin, ModelViewSet):
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
         request_subgroup = request.GET.get("subgroup")
-
         blue_tariff, green_tariff = distributor.get_tariffs_by_subgroups(request_subgroup)
 
         response = response_tariffs_of_distributor(
@@ -169,7 +166,6 @@ class DistributorViewSet(CachedViewSetMixin, ModelViewSet):
             blue_tariff,
             green_tariff,
         )
-
         return Response(response, status.HTTP_200_OK)
 
 
@@ -221,12 +217,12 @@ class TariffViewSet(CachedViewSetMixin, ViewSet):
 
     def _handle_integrity_error(self, error: IntegrityError):
         error_message = str(error)
-        # Importante essas duas verificações pois em ambientes de testes, o banco roda em sqlite e a mensagem de exceção é diferente
+
         if "UNIQUE constraint failed:" in error_message:
-            formatted_error = f"There is already a tariff with given (subgroup, distributor, flag)=-"
+            formatted_error = "There is already a tariff with given (subgroup, distributor, flag)=-"
             return Response({"errors": [formatted_error]}, status=status.HTTP_403_FORBIDDEN)
         elif "duplicate key value violates unique constraint" in error_message:
-            duplicate_key = re.search("\)=(\(.*\))", error_message).groups(0)[0]
+            duplicate_key = re.search(r"\)=(\(.*\))", error_message).groups(0)[0]
             formatted_error = f"There is already a tariff with given (subgroup, distributor, flag)={duplicate_key}"
             return Response({"errors": [formatted_error]}, status=status.HTTP_403_FORBIDDEN)
         else:
@@ -264,10 +260,15 @@ class TariffViewSet(CachedViewSetMixin, ViewSet):
         tariffs.filter(flag=Tariff.GREEN).update(**data["green"], start_date=start_date, end_date=end_date)
 
         blue_tariff = Tariff.objects.filter(
-            subgroup=data["subgroup"], distributor=data["distributor"], flag=Tariff.BLUE
+            subgroup=data["subgroup"],
+            distributor=data["distributor"],
+            flag=Tariff.BLUE,
         ).first()
+
         green_tariff = Tariff.objects.filter(
-            subgroup=data["subgroup"], distributor=data["distributor"], flag=Tariff.GREEN
+            subgroup=data["subgroup"],
+            distributor=data["distributor"],
+            flag=Tariff.GREEN,
         ).first()
 
         ser = BlueAndGreenTariffsSerializer(
@@ -283,6 +284,7 @@ class TariffViewSet(CachedViewSetMixin, ViewSet):
 
         self.delete_view_cache()
         return Response(ser.data)
+
 
 class DownloadPDFViewSet(ViewSet):
     def list(self, request):

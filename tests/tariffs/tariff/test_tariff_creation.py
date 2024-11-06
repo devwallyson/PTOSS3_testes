@@ -1,7 +1,7 @@
 import pytest
 
-from tests.test_utils import dicts_test_utils
-from tests.test_utils import create_objects_test_utils
+from tests.test_utils import create_objects_test_utils, dicts_test_utils
+
 
 @pytest.mark.django_db
 class TestTariff:
@@ -11,7 +11,6 @@ class TestTariff:
 
         self.distributor_dict = dicts_test_utils.distributor_dict_1
         self.distributor = create_objects_test_utils.create_test_distributor(self.distributor_dict, self.university)
-
 
     def test_create_blue_tariff(self):
         tariff_dict = dicts_test_utils.tariff_dict_1
@@ -41,7 +40,7 @@ class TestTariff:
 
         with pytest.raises(Exception) as e:
             tariff.as_blue_tariff()
-        assert 'Cannot convert' in str(e.value)
+        assert "Cannot convert" in str(e.value)
 
     def test_mishandles_blue_tariff_as_green_tariff(self):
         tariff_dict = dicts_test_utils.tariff_dict_1
@@ -49,4 +48,4 @@ class TestTariff:
 
         with pytest.raises(Exception) as e:
             tariff.as_green_tariff()
-        assert 'Cannot convert' in str(e.value)
+        assert "Cannot convert" in str(e.value)

@@ -1,54 +1,67 @@
 from rest_framework import serializers
 
-from universities.models import ConsumerUnit, Contract
-from tariffs.models import Distributor
+from contracts.models import Contract, EnergyBill
 from contracts.validators import CsvFileValidator
-from . import models
+from tariffs.models import Distributor
+from universities.models import ConsumerUnit
+
 
 class ContractSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
     subgroup = serializers.CharField()
     end_date = serializers.DateField(read_only=True)
-
-    consumer_unit = serializers.PrimaryKeyRelatedField(
-        queryset=ConsumerUnit.objects.all())
-    distributor = serializers.PrimaryKeyRelatedField(
-        queryset=Distributor.objects.all())
+    consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
+    distributor = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
 
     class Meta:
-        model = models.Contract
-        fields = fields = ['url', 'id', 'consumer_unit', 'distributor', 'start_date', 'end_date', 'tariff_flag',
-                           'subgroup', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
+        model = Contract
+        fields = fields = [
+            "url",
+            "id",
+            "consumer_unit",
+            "distributor",
+            "start_date",
+            "end_date",
+            "tariff_flag",
+            "subgroup",
+            "peak_contracted_demand_in_kw",
+            "off_peak_contracted_demand_in_kw",
+        ]
 
 
 class ContractListSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
     subgroup = serializers.CharField(read_only=True)
     end_date = serializers.DateField(read_only=True)
-
-    consumer_unit = serializers.PrimaryKeyRelatedField(
-        queryset=ConsumerUnit.objects.all())
-    distributor = serializers.PrimaryKeyRelatedField(
-        queryset=Distributor.objects.all())
-    distributor_name = serializers.CharField(source='get_distributor_name')
+    consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
+    distributor = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
+    distributor_name = serializers.CharField(source="get_distributor_name")
 
     class Meta:
-        model = models.Contract
-        fields = fields = ['url', 'id', 'consumer_unit', 'distributor', 'distributor_name', 'start_date', 'end_date', 'tariff_flag',
-                           'subgroup', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
+        model = Contract
+        fields = fields = [
+            "url",
+            "id",
+            "consumer_unit",
+            "distributor",
+            "distributor_name",
+            "start_date",
+            "end_date",
+            "tariff_flag",
+            "subgroup",
+            "peak_contracted_demand_in_kw",
+            "off_peak_contracted_demand_in_kw",
+        ]
 
 
 class EnergyBillSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
-
-    contract = serializers.PrimaryKeyRelatedField(
-        queryset=Contract.objects.all())
-    consumer_unit = serializers.PrimaryKeyRelatedField(
-        queryset=ConsumerUnit.objects.all())
+    contract = serializers.PrimaryKeyRelatedField(queryset=Contract.objects.all())
+    consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
 
     class Meta:
-        model = models.EnergyBill
-        fields = '__all__'
+        model = EnergyBill
+        fields = "__all__"
 
 
 class ContractListParamsSerializer(serializers.Serializer):
@@ -99,5 +112,4 @@ class CSVFileSerializer(serializers.Serializer):
 
     def validate_file(self, file):
         validator = CsvFileValidator()
-        df = validator(file)
-        return df
+        return validator(file)

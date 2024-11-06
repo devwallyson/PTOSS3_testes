@@ -1,27 +1,25 @@
 import os
+
 from datetime import datetime
 
-from rest_framework import status
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.request import Request
-from django.http import JsonResponse
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import FileResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
-from django.http import FileResponse
-
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
 from universities.models import ConsumerUnit
 from users.requests_permissions import RequestsPermissions
 from utils.mixins.cache_mixin import CachedViewSetMixin
 from utils.subgroup_util import Subgroup
-from . import models
-from . import serializers
-from . import services
+
+from . import models, serializers, services
 
 
 class ContractViewSet(CachedViewSetMixin, ModelViewSet):
@@ -32,7 +30,6 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.university_user_permissions
-
         body_consumer_unit_id = request.data["consumer_unit"]
 
         try:
@@ -53,7 +50,6 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
     def update(self, request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.university_user_permissions
         contract = self.get_object()
-
         university_id = contract.consumer_unit.university.id
 
         try:
@@ -68,8 +64,8 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
     def list(self, request: Request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.default_users_permissions
-
         params_serializer = serializers.ContractListParamsSerializer(data=request.GET)
+
         if not params_serializer.is_valid():
             return Response(params_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -261,11 +257,13 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
                 serializer.save()
                 response_data.append(serializer.data)
 
-        self.delete_related_view_cache(additional_viewsets=[
-            "contracts.views.EnergyBillViewSet",
-            "contracts.views.ContractViewSet",
-            "universities.views.ConsumerUnitViewSet",
-        ])
+        self.delete_related_view_cache(
+            additional_viewsets=[
+                "contracts.views.EnergyBillViewSet",
+                "contracts.views.ContractViewSet",
+                "universities.views.ConsumerUnitViewSet",
+            ]
+        )
         return Response({"created": response_data}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(method="post")

@@ -114,6 +114,43 @@ executar `./manage.py makemigrations` e depois `./manage.py migrate`.
 
 Para reverter todas as migrações de um app: `./manage.py migrate <app> zero`
 
+
+## Padrões de Código
+
+Ruff utilizado para garantir os padrões de qualidade de código adotados no projeto
+
+**Para executar localmente:**
+
+```bash
+# Verificar problemas
+ruff check .
+
+# Formatar código
+ruff format .
+
+# Corrigir problemas automaticamente
+ruff check . --fix
+```
+
+**Configurando o código VSCode:**
+
+Configurar o Ruff para formatar o código Python ao salvar ativando o editor.formatOnSave 
+ação em settings.json e definindo Ruff como seu formatador padrão:
+
+```json
+# precisa 
+{
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff"
+    "editor.codeActionsOnSave": {
+        "source.fixAll.ruff": "explicit",           // ruff check --fix . (Corrigir violações de lint ao salvar)
+    }
+  }
+}
+
+```
+
 ## VSCode
 
 Se você usa [VSCode](https://code.visualstudio.com/) como editor de código, 
@@ -126,3 +163,6 @@ completo com VSCode
 intellisense e autocomplete para Python
 - [Test Explorer UI](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer):
 Lista e executa testes pelo VSCode (com atalhos. Leia [testes](testes.md#útil-se-você-usa-vscode))
+
+- [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff):
+Uma ferramenta extremamente rápida Linter Python e formatador de código, escrito em Rust.
