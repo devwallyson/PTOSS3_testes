@@ -1,13 +1,14 @@
 from django.conf import settings
 
-def template_email_first_access(user_name, university_acronym, link_reset_password_page):
-    title = 'Cadastrado na MEPA - Monitoramento de Energia em Plataforma Aberta'
 
-    message = f'''
+def template_email_first_access(user_name, university_acronym, link_reset_password_page):
+    title = "Cadastrado na MEPA - Monitoramento de Energia em Plataforma Aberta"
+
+    message = f"""
         == Esta é uma mensagem automática, não é necessário responder ==
 
         <p>Olá {user_name},</p>
-        
+
         <p>Seu cadastrado foi criado na <a href="{settings.MEPA_FRONT_END_URL}">MEPA - Monitoramento de Energia em Plataforma Aberta</a> para análise do contrato de fornecimento de energia da(o) {university_acronym}.</p>
 
         Para acessar o sistema, cadastre uma senha clicando no link abaixo:<br>
@@ -18,14 +19,15 @@ def template_email_first_access(user_name, university_acronym, link_reset_passwo
         <p>Tenha um bom dia.</p>
 
         == Esta é uma mensagem automática, não é necessário responder ==
-    '''
+    """  # noqa
 
     return (title, message)
 
-def template_email_recovery_password(user_name, link_reset_password_page):
-    title = 'Redefinição de senha -> MEPA - Monitoramento de Energia em Plataforma Aberta'
 
-    message = f'''
+def template_email_recovery_password(user_name, link_reset_password_page):
+    title = "Redefinição de senha -> MEPA - Monitoramento de Energia em Plataforma Aberta"
+
+    message = f"""
         == Esta é uma mensagem automática, não é necessário responder ==
 
         <p>Olá {user_name},</p>
@@ -40,14 +42,15 @@ def template_email_recovery_password(user_name, link_reset_password_page):
         <p>Tenha um bom dia.</p>
 
         == Esta é uma mensagem automática, não é necessário responder ==
-    '''
+    """  # noqa
 
     return (title, message)
 
-def template_email_recovery_password_by_admin(user_name, link_reset_password_page):
-    title = 'Redefinição de senha -> MEPA - Monitoramento de Energia em Plataforma Aberta'
 
-    message = f'''
+def template_email_recovery_password_by_admin(user_name, link_reset_password_page):
+    title = "Redefinição de senha -> MEPA - Monitoramento de Energia em Plataforma Aberta"
+
+    message = f"""
         == Esta é uma mensagem automática, não é necessário responder ==
 
         <p>Olá {user_name},</p>
@@ -60,6 +63,6 @@ def template_email_recovery_password_by_admin(user_name, link_reset_password_pag
         <p>Tenha um bom dia.</p>
 
         == Esta é uma mensagem automática, não é necessário responder ==
-    '''
+    """  # noqa
 
     return (title, message)

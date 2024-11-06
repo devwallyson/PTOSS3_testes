@@ -1,19 +1,17 @@
 import pytest
 
-from utils.user.user_type_util import UserType
-
-from tests.test_utils import dicts_test_utils
 from users import models
+from utils.user.user_type_util import UserType
 
 
 def test_get_user_type():
-    with pytest.raises(Exception, match=r'User type \(\w+\) does not exist'):
-        UserType.get_user_type('some_user_type')
+    with pytest.raises(Exception, match=r"User type \(\w+\) does not exist"):
+        UserType.get_user_type("some_user_type")
 
 
 def test_raise_exeception_for_invalid_user_type():
     # CT1
-    invalid_user_type = 'invalid'
+    invalid_user_type = "invalid"
 
     try:
         UserType.is_valid_user_type(invalid_user_type)
@@ -38,7 +36,7 @@ def test_return_user_type_for_university_user_and_valid_university_user_type():
 def test_raise_expection_for_valid_university_user_and_invalid_university_user_type():
     # CT4
     user_model = models.UniversityUser
-    user_type = 'invalid'
+    user_type = "invalid"
 
     try:
         UserType.is_valid_user_type(user_type, user_model)
@@ -49,7 +47,7 @@ def test_raise_expection_for_valid_university_user_and_invalid_university_user_t
 
 def test_raise_exeception_for_invalid_university_user_and_valid_university_user_type():
     # CT5
-    user_model = 'invalid'
+    user_model = "invalid"
     user_type = models.CustomUser.university_user_types[0]
 
     try:
@@ -80,7 +78,7 @@ def test_raise_expection_for_valid_custom_user_and_not_super_user_type():
 
 def test_raise_exception_for_invalid_custom_user_and_valid_super_user_type():
     # CT8
-    user_model = 'invalid'
+    user_model = "invalid"
     user_type = models.CustomUser.university_user_types[0]
 
     try:
@@ -89,18 +87,22 @@ def test_raise_exception_for_invalid_custom_user_and_valid_super_user_type():
     except Exception:
         assert True
 
+
 # Novos Casos de Teste para Cobertura MC/DC do método is_valid_user_type
+
 
 def test_invalid_user_type_not_in_all_user_types():
     # CT1 (MC/DC)
-    user_type = 'invalid_user_type'
-    with pytest.raises(Exception, match=r'User type \(\w+\) does not exist'):
+    user_type = "invalid_user_type"
+    with pytest.raises(Exception, match=r"User type \(\w+\) does not exist"):
         UserType.is_valid_user_type(user_type)
+
 
 def test_valid_user_type_in_all_user_types():
     # CT2 (MC/DC)
     user_type = models.CustomUser.all_user_types[0]
     assert UserType.is_valid_user_type(user_type) == user_type
+
 
 def test_user_type_in_university_user_types():
     # CT3 (MC/DC)
@@ -108,22 +110,25 @@ def test_user_type_in_university_user_types():
     user_model = models.UniversityUser
     assert UserType.is_valid_user_type(user_type, user_model) == user_type
 
+
 def test_user_type_not_in_university_user_types():
     # CT4 (MC/DC)
     user_type = models.CustomUser.all_user_types[0]
     user_model = models.UniversityUser
-    invalid_user_type = 'invalid_university_user_type'
+    invalid_user_type = "invalid_university_user_type"
     if invalid_user_type not in models.CustomUser.all_user_types:
         models.CustomUser.all_user_types.append(invalid_user_type)
-    with pytest.raises(Exception, match=r'Wrong User type \(\w+\) for this Model User'):
+    with pytest.raises(Exception, match=r"Wrong User type \(\w+\) for this Model User"):
         UserType.is_valid_user_type(invalid_user_type, user_model)
+
 
 def test_user_type_not_super_user_type():
     # CT5 (MC/DC)
     user_type = models.CustomUser.university_user_types[0]
     user_model = models.CustomUser
-    with pytest.raises(Exception, match=r'Wrong User type \(\w+\) for this Model User'):
+    with pytest.raises(Exception, match=r"Wrong User type \(\w+\) for this Model User"):
         UserType.is_valid_user_type(user_type, user_model)
+
 
 def test_user_type_is_super_user_type():
     # CT6 (MC/DC)

@@ -18,8 +18,8 @@ from users.authentications import (
 )
 from users.urls import router as users_router
 
-from .views import ClearCacheView
 from .schema import Schema
+from .views import ClearCacheView
 
 router = DefaultRouter()
 router.registry.extend(universities_router.registry)
@@ -34,14 +34,14 @@ urlpatterns = [
     path("", RedirectView.as_view(url=reverse_lazy("api-root"), permanent=False)),
     path("api/admin/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls")),
-    path(r"api/token/", Authentication.as_view()),
+    path("api/token/", Authentication.as_view()),
     path("api/token/logout/", Logout.as_view()),
-    path(r"api/reset-password-admin/", ResetPasswordByAdmin.as_view()),
-    path(r"api/reset-password/", ResetPassword.as_view()),
-    path(r"api/reset-password/confirm", ConfirmResetPassword.as_view()),
-    path(r"api/", include(router.urls), name="api-root"),
+    path("api/reset-password-admin/", ResetPasswordByAdmin.as_view()),
+    path("api/reset-password/", ResetPassword.as_view()),
+    path("api/reset-password/confirm", ConfirmResetPassword.as_view()),
+    path("api/", include(router.urls), name="api-root"),
     path("api/swagger/schema/", schema_view.with_ui("swagger", cache_timeout=0)),
-    path('api/clear-cache/', ClearCacheView.as_view(), name='clear_cache'),
+    path("api/clear-cache/", ClearCacheView.as_view(), name="clear_cache"),
 ]
 
 if settings.DEBUG:

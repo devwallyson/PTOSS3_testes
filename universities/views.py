@@ -1,19 +1,19 @@
-from rest_framework import status
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.request import Request
-from drf_yasg.utils import swagger_auto_schema
+from django.core.exceptions import ValidationError
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.core.exceptions import ValidationError
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
+from users.models import CustomUser, UniversityUser
 from users.requests_permissions import RequestsPermissions
-from users.models import CustomUser
-from users.models import UniversityUser
 from utils.mixins.cache_mixin import CachedViewSetMixin
-from .models import ConsumerUnit, University
+
 from . import serializers
+from .models import ConsumerUnit, University
 
 
 class UniversityViewSet(CachedViewSetMixin, ModelViewSet):
@@ -154,7 +154,6 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
     def retrieve(self, request, *args, pk=None, **kwargs):
         user_types_with_permission = RequestsPermissions.default_users_permissions
         queryset = self.get_object()
-
         university_user: UniversityUser = UniversityUser.objects.get(id=request.user.id)
 
         try:
@@ -198,7 +197,7 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
         try:
             created_uc, _ = ConsumerUnit.create_consumer_unit_and_contract(data["consumer_unit"], data["contract"])
 
-            serializer = serializers.ConsumerUnitSerializer(created_uc, context={'request': request})
+            serializer = serializers.ConsumerUnitSerializer(created_uc, context={"request": request})
 
             self.delete_related_view_cache(
                 additional_viewsets=["contracts.views.ContractViewSet", "universities.views.ConsumerUnitViewSet"]
@@ -212,12 +211,7 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
     @action(detail=False, methods=["post"])
     def edit_consumer_unit_and_contract(self, request):
         user_types_with_permission = RequestsPermissions.university_user_permissions
-
         data = request.data
-
-        # params_serializer = serializers.CreateConsumerUnitAndContractSerializerForDocs(data=request.data)
-        # if not params_serializer.is_valid():
-        # return Response(params_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             body_university_id = data["consumer_unit"]["university"]
@@ -240,25 +234,17 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
     @action(detail=False, methods=["post"])
     def edit_consumer_unit_code_and_create_contract(self, request):
         user_types_with_permission = RequestsPermissions.university_user_permissions
-
         data = request.data
-
-        # params_serializer = serializers.EditConsumerUnitCodeAndCreateContractSerializerForDocs(data=request.data)
-        # if not params_serializer.is_valid():
-        # return Response(params_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             body_consumer_unit_id = data["consumer_unit"]["consumer_unit_id"]
-
             university = ConsumerUnit.objects.get(id=body_consumer_unit_id)
-
             RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university.id)
         except Exception as error:
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
         try:
             ConsumerUnit.edit_consumer_unit_code_and_create_contract(data["consumer_unit"], data["contract"])
-
             self.delete_related_view_cache(
                 additional_viewsets=["contracts.views.ContractViewSet", "universities.views.ConsumerUnitViewSet"]
             )

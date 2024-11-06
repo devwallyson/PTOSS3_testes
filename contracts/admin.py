@@ -15,7 +15,12 @@ class ContractAdmin(admin.ModelAdmin):
         "subgroup",
     )
     search_fields = ("consumer_unit", "distributor")
-    list_filter = ("consumer_unit__university__acronym", "distributor", "tariff_flag", "end_date")
+    list_filter = (
+        "consumer_unit__university__acronym",
+        "distributor",
+        "tariff_flag",
+        "end_date",
+    )
     ordering = ("distributor", "start_date")
 
     def get_consumer_unit_university(self, obj):

@@ -1,10 +1,7 @@
-# flake8: noqa
-# pylint: skip-file
-
 import environ
 
-from .common import *
-
+from .common import *  # noqa
+from .common import BASE_DIR, INSTALLED_APPS, LOGGING, MIDDLEWARE, REST_FRAMEWORK
 
 env = environ.Env()
 ENV_FILE = BASE_DIR / ".envs" / ".env.test"
@@ -16,7 +13,7 @@ DEBUG = env.bool("DJANGO_DEBUG", True)
 TEST = env.bool("IS_TESTING", default=False)
 
 LOG_LEVEL = env("LOG_LEVEL", default="INFO")
-LOGGING['loggers']['apps']['level'] = LOG_LEVEL
+LOGGING["loggers"]["apps"]["level"] = LOG_LEVEL
 
 ALLOWED_HOSTS = env.list(
     "DJANGO_ALLOWED_HOSTS",
@@ -37,8 +34,8 @@ CORS_ALLOWED_ORIGINS = env.list("DJANGO_CORS_ALLOWED_ORIGINS", default=["http://
 
 
 # BACKEND CACHE
-# ------------------------------------------------------------------------------------------------
-if TEST: 
+# -------------------------------------------------------------------------------------
+if TEST:
     CACHES = {
         "default": {
             "BACKEND": "tests.test_mock_cache.MockCacheTest",
@@ -59,7 +56,7 @@ else:
 
 
 # DATABASES
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 # database with in memory database for pytest.
 if TEST:
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}}
@@ -77,7 +74,7 @@ else:
 
 
 # STORAGE CONFIGURATION
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 # WhiteNoise middleware should be placed directly after the Django SecurityMiddleware
 if not TEST:
     index = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware")
@@ -91,7 +88,7 @@ if not TEST:
 
 
 # MEC ENERGIA
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 MEPA_FRONT_END_URL = env("FRONT_END_URL")
 RECOMMENDATION_METHOD = env("RECOMMENDATION_METHOD")
 
@@ -107,12 +104,12 @@ SMTP_EMAIL_PASSWORD = env("SMTP_EMAIL_PASSWORD")
 
 
 # DJANGO EXTENSIONS
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 INSTALLED_APPS += ["django_extensions"]
 
 
 # DEBUG TOOLBAR
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 if not TEST:
     MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
     INSTALLED_APPS += ["debug_toolbar"]
@@ -124,7 +121,7 @@ if not TEST:
 
 
 # PYTEST SETTINGS
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 if TEST:
     del REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"]
     del REST_FRAMEWORK["DEFAULT_PARSER_CLASSES"]

@@ -68,7 +68,6 @@ class CustomUserAdmin(UserAdmin):
 
     get_full_name.short_description = "Full Name"
 
-
     def activate_users(self, request, queryset):
         updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} usuários foram ativados com sucesso.", messages.SUCCESS)
