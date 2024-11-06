@@ -39,7 +39,7 @@ class StaticGetters:
                 'date': b['date'],
                 'peak_consumption_in_kwh': float(b['peak_consumption_in_kwh']),
                 'off_peak_consumption_in_kwh': float(b['off_peak_consumption_in_kwh']),
-                'peak_measured_demand_in_kw': float(b['peak_measured_demand_in_kw']),
+                'peak_measured_demand_in_kw': float(b['peak_measured_demand_in_kw'] if b['peak_measured_demand_in_kw'] != None else float(b['off_peak_measured_demand_in_kw'])),
                 'off_peak_measured_demand_in_kw': float(b['off_peak_measured_demand_in_kw']),
                 'contract_peak_demand_in_kw': float(contract.peak_contracted_demand_in_kw),
                 'contract_off_peak_demand_in_kw': float(contract.off_peak_contracted_demand_in_kw),
