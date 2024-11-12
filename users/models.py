@@ -54,7 +54,7 @@ class UserToken(models.Model):
 
     @classmethod
     def get_user_by_token_and_set_invalid_tried(cls, token):
-        from .authentications import code_password_token_expired, code_password_token_ok
+        from .authentications import CODE_PASSWORD_TOKEN_EXPIRED, CODE_PASSWORD_TOKEN_OK
 
         try:
             user_token = UserToken.objects.get(token=token)
@@ -63,11 +63,11 @@ class UserToken(models.Model):
                 raise Exception("Usuário já tem uma senha de acesso")
 
             if user_token.is_valid_token:
-                return user_token.user, code_password_token_ok
+                return user_token.user, CODE_PASSWORD_TOKEN_OK
             else:
                 user_token.set_invalid_tried_datetime_to_send_new_email()
 
-                return user_token.user, code_password_token_expired
+                return user_token.user, CODE_PASSWORD_TOKEN_EXPIRED
 
         except UserToken.DoesNotExist:
             raise Exception("Token não existe ou já utilizado")
