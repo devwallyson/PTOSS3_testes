@@ -78,7 +78,10 @@ class ConsumerUnit(models.Model):
     created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ["university", "name", "code"]
+        constraints = [
+            models.UniqueConstraint(fields=["university", "code"], name="unique_consumer_unit_university_code"),
+            models.UniqueConstraint(fields=["university", "name"], name="unique_consumer_unit_university_name"),
+        ]
 
     def __str__(self):
         return f"{self.name} - {self.code}"

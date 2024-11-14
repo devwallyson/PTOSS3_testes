@@ -63,7 +63,10 @@ ignore = [
     "S101",    # use of assert detected
     "TCH002",  # third party import (for pytest)
     "D",       # missing docstring
-    "ANN"      # missing type annotations
+    "ANN",      # missing type annotations
+    "F401",    # unused import
+    "F811",    # redefinition of unused variable
+
 ]
 
 
