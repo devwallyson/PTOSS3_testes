@@ -1,6 +1,6 @@
 import os
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -14,16 +14,17 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from contracts.models import Contract, EnergyBill
 from universities.models import ConsumerUnit
 from users.requests_permissions import RequestsPermissions
 from utils.mixins.cache_mixin import CachedViewSetMixin
 from utils.subgroup_util import Subgroup
 
-from . import models, serializers, services
+from . import serializers, services
 
 
 class ContractViewSet(CachedViewSetMixin, ModelViewSet):
-    queryset = models.Contract.objects.all()
+    queryset = Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     cache_key_prefix = "contract_viewset"
     cache_timeout = 3600 * 6
@@ -83,7 +84,7 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
         except Exception as error:
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
-        queryset = models.Contract.objects.filter(consumer_unit=consumer_unit.id)
+        queryset = Contract.objects.filter(consumer_unit=consumer_unit.id)
         serializer = serializers.ContractSerializer(queryset, many=True, context={"request": request})
 
         return Response(serializer.data, status.HTTP_200_OK)
@@ -147,7 +148,7 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
 
 
 class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
-    queryset = models.EnergyBill.objects.all()
+    queryset = EnergyBill.objects.all()
     serializer_class = serializers.EnergyBillSerializer
     cache_key_prefix = "energybill_viewset"
     cache_timeout = 3600 * 168  # 3600 segundos * 24  = 1 dia (dados nao mudam com frequência)
@@ -169,7 +170,7 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
         if len(address) > 1000:
             return Response("Endereco is too long.", status=status.HTTP_400_BAD_REQUEST)
 
-        if models.EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
+        if EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
             return Response(
                 "There is already an energy bill this month and year for this consumer unit.",
                 status=status.HTTP_400_BAD_REQUEST,
@@ -225,7 +226,7 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
                 errors.append({"error": "Invalid date format", "data": bill_data})
                 continue
 
-            if models.EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
+            if EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
                 errors.append(
                     {
                         "error": "There is already an energy bill this month and year for this consumer unit",
@@ -234,7 +235,7 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
                 )
                 continue
 
-            if not models.EnergyBill.check_energy_bill_covered_by_contract(consumer_unit_id, date):
+            if not EnergyBill.check_energy_bill_covered_by_contract(consumer_unit_id, date):
                 errors.append({"error": "No contract covers the date of this energy bill", "data": bill_data})
                 continue
 
@@ -296,3 +297,24 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
             return FileResponse(open(file_path, "rb"), as_attachment=True, filename=os.path.basename(file_path))
         else:
             return Response("Document does not exist", status=400)
+
+    @action(detail=False, methods=["get"], url_path="plot-graph")
+    def plot_graph(self, request):
+        consumer_unit_id = request.GET.get("consumer_unit_id")
+
+        if not consumer_unit_id:
+            return Response({"error": "consumer_unit_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        consumer_unit = ConsumerUnit.objects.get(id=consumer_unit_id)
+        energy_bills = EnergyBill.objects.filter(
+            consumer_unit=consumer_unit_id,
+            date__gte=datetime.now().date() - timedelta(days=365),
+        ).order_by("date")
+
+        graph_data = {
+            "energy_bills": energy_bills,
+            "contract_data": consumer_unit.current_contract,
+        }
+
+        serializer = serializers.EnergyBillGraphSerializer(graph_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
