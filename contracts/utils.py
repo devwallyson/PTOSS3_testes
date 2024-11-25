@@ -1,9 +1,12 @@
+import logging
+
 from datetime import datetime
 from pathlib import Path
 
 import arrow
 
 DATE_FORMAT = ["MMM/YYYY", "MM/YYYY", "MMM/YY", "DD/MM/YYYY", "YYYY-MM-DD", "YYYY-MM"]
+logger = logging.getLogger("uc_sheet")
 
 
 class ContractUtils:
@@ -17,6 +20,7 @@ class ContractUtils:
                 locale="pt_br",
             )
         except Exception:
+            logger.debug("Invalid date received: ", energy_bill_date)
             return energy_bill_date
 
         return date_obj.date()

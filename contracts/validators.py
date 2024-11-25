@@ -1,4 +1,5 @@
 import csv
+import logging
 
 from io import TextIOWrapper
 
@@ -8,6 +9,8 @@ from django.utils.deconstruct import deconstructible
 from rest_framework import serializers
 
 from contracts.utils import ContractUtils
+
+logger = logging.getLogger("uc_sheet")
 
 
 @deconstructible
@@ -30,16 +33,20 @@ class CsvFileValidator:
             decoded_file = TextIOWrapper(file.file, encoding="utf-8")
             delimiter = self._get_csv_delimiter(decoded_file)
             if delimiter not in [",", ";"]:
+                logger.error(f"Invalid csv delimiter {delimiter}. Only ; and , are accepted")
                 raise serializers.ValidationError(f"Invalid csv delimiter {delimiter}. Only ; and , are accepted")
             try:
                 df = pd.read_csv(decoded_file, sep=delimiter, decimal=",", header=1)
-            except Exception:
-                raise serializers.ValidationError("Invalid csv file")
+            except Exception as exc:
+                logger.error(f"Invalid csv file: {exc}")
+                raise serializers.ValidationError("Invalid csv file: ", exc)
         else:
             try:
                 df = pd.read_excel(file, decimal=",", header=1)
-            except Exception:
-                raise serializers.ValidationError("Invalid excel file")
+
+            except Exception as exc:
+                logger.error(f"Invalid excel file: {exc}")
+                raise serializers.ValidationError("Invalid excel file: ", exc)
         return df
 
     def _validate_headers(self, df):
@@ -55,6 +62,7 @@ class CsvFileValidator:
         try:
             df.rename(columns=translation_dict, inplace=True, errors="raise")
         except KeyError as e:
+            logger.error(f"{e}")
             raise serializers.ValidationError(f"{e}")
         return df.to_dict(orient="records")
 

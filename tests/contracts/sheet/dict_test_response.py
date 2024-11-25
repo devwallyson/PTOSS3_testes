@@ -3,7 +3,7 @@ invalid_date_format_dict = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": [
@@ -51,7 +51,7 @@ invalid_date_all_dict = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": None,
@@ -81,7 +81,7 @@ invalid_date_all_dict = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": [
@@ -117,7 +117,7 @@ invalid_date_all_dict = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": [
@@ -152,7 +152,7 @@ invalid_date_all_dict = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": [
@@ -196,7 +196,7 @@ invalid_number_dict_xlsx = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": None,
@@ -231,7 +231,7 @@ invalid_number_dict_xlsx = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": [
@@ -271,7 +271,7 @@ invalid_number_dict_xlsx = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": None,
@@ -311,7 +311,7 @@ invalid_number_dict_csv = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": None,
@@ -346,7 +346,7 @@ invalid_number_dict_csv = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": [
@@ -386,7 +386,7 @@ invalid_number_dict_csv = {
         {
             "consumer_unit": {
                 "error": False,
-                "value": "1",
+                "value": 1,
             },
             "date": {
                 "errors": None,

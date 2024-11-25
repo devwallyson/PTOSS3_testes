@@ -1,3 +1,4 @@
+import logging
 import os
 
 from datetime import datetime, timedelta
@@ -270,13 +271,15 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
     @swagger_auto_schema(method="post")
     @action(detail=False, methods=["post"], url_path="upload")
     def upload_csv(self, request, *args, **kwargs):
+        logger = logging.getLogger("uc_sheet")
         energy_bill_data = []
         serializer = serializers.CSVFileSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
+        consumer_unit_id = serializer.validated_data["consumer_unit_id"]
+        logger.info(f"Consumer unit with id: {consumer_unit_id} is uploading a file")
         energy_bill_data = services.ContractServices().get_file_errors(
-            serializer.validated_data["file"], request.data.get("consumer_unit_id")
+            serializer.validated_data["file"], consumer_unit_id
         )
         return Response({"data": energy_bill_data}, status=status.HTTP_200_OK)
 
