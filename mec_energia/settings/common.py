@@ -189,6 +189,12 @@ LOGGING = {
             "backupCount": 5,  # 5 files = 50MB total
             "formatter": "verbose",
         },
+        "tasks": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "tasks.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "formatter": "middle",
+        },
     },
     "loggers": {
         "django": {
@@ -216,9 +222,13 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "tasks": {
+            "handlers": ["console", "tasks"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
-
 
 # MEC ENERGIA
 # -------------------------------------------------------------------------------------
