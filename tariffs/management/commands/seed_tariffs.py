@@ -56,33 +56,29 @@ class Command(BaseCommand):
         )
 
         tariff = {
-            "peak_tusd_in_reais_per_mwh": tariffs[
-                (tariffs["Posto"] == "Ponta") &
-                (tariffs["Unidade"] == "MWh")
-            ]["TUSD"].iloc[0],
-
-            "peak_te_in_reais_per_mwh": tariffs[
-                (tariffs["Posto"] == "Ponta") &
-                (tariffs["Unidade"] == "MWh")
-            ]["TE"].iloc[0],
-
+            "peak_tusd_in_reais_per_mwh": tariffs[(tariffs["Posto"] == "Ponta") & (tariffs["Unidade"] == "MWh")][
+                "TUSD"
+            ].iloc[0],
+            "peak_te_in_reais_per_mwh": tariffs[(tariffs["Posto"] == "Ponta") & (tariffs["Unidade"] == "MWh")][
+                "TE"
+            ].iloc[0],
             "off_peak_tusd_in_reais_per_mwh": tariffs[
-                (tariffs["Posto"] == "Fora ponta") &
-                (tariffs["Unidade"] == "MWh")
+                (tariffs["Posto"] == "Fora ponta") & (tariffs["Unidade"] == "MWh")
             ]["TUSD"].iloc[0],
-
             "off_peak_te_in_reais_per_mwh": tariffs[
-                (tariffs["Posto"] == "Fora ponta") &
-                (tariffs["Unidade"] == "MWh")
+                (tariffs["Posto"] == "Fora ponta") & (tariffs["Unidade"] == "MWh")
             ]["TE"].iloc[0],
             "power_generation_tusd_in_reais_per_kw": tusd_g,
         }
 
         if flag == Tariff.GREEN:
-            tariff.update({"na_tusd_in_reais_per_kw": tariffs[
-                (tariffs["Posto"] == "NA") &
-                (tariffs["Unidade"] == "kW")
-            ]["TUSD"].iloc[0]})
+            tariff.update(
+                {
+                    "na_tusd_in_reais_per_kw": tariffs[(tariffs["Posto"] == "NA") & (tariffs["Unidade"] == "kW")][
+                        "TUSD"
+                    ].iloc[0]
+                }
+            )
         else:
             tariff.update(
                 {

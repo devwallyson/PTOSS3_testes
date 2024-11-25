@@ -182,6 +182,13 @@ LOGGING = {
             "backupCount": 5,  # 5 files = 50MB total
             "formatter": "verbose",
         },
+        "uc_sheet_logfile": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "uc_sheet.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 5,  # 5 files = 50MB total
+            "formatter": "verbose",
+        },
     },
     "loggers": {
         "django": {
@@ -201,6 +208,11 @@ LOGGING = {
         },
         "apps": {
             "handlers": ["console", "apps_logfile"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "uc_sheet": {
+            "handlers": ["console", "uc_sheet_logfile"],
             "level": "INFO",
             "propagate": False,
         },
