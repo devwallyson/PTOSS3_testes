@@ -88,3 +88,5 @@ dmypy.json
 .vscode/
 .draft/
 .env
+env
+backups/
