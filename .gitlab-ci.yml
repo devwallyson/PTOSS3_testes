@@ -18,7 +18,7 @@ variables:
   VERSION: '1.0.$CI_PIPELINE_IID'
 
 .base-python:
-  image: python:3.10.5
+  image: python:3.11.9
   before_script:
     - cd $CI_PROJECT_DIR
     - cp .envs/.env.dev .env # Copy .env.dev to .env
@@ -65,18 +65,17 @@ variables:
 
 lint:
   stage: lint
-  extends: .base-python
+  image: registry.gitlab.com/pipeline-components/ruff:latest
+  before_script:
+    - echo "Starting linting with Ruff $(ruff --version)"
   script:
-    - |
-      pylint_output=$(python -m pylint --load-plugins pylint_django .)
-      pylint_score=$(echo "$pylint_output" | grep -o "rated at [0-9]*\.[0-9]*/10" | grep -o "[0-9]*\.[0-9]*")
-      echo "$pylint_output"  # Exibe a saída completa do pylint
-      if (( $(echo "$pylint_score < 8.0" | bc -l) )); then
-        echo "Pylint score is below 8.0: $pylint_score"
-        exit 1
-      else
-        echo "Pylint score is $pylint_score, which is acceptable."
-      fi
+    - ruff check --output-format=gitlab > code-quality-report.json
+  artifacts:
+    reports:
+      codequality: code-quality-report.json
+    expire_in: 1 week
+
+  
 
 unit-test:
   stage: test

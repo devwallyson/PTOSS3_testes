@@ -1,4 +1,5 @@
 import smtplib
+
 from email.message import Message
 
 from django.conf import settings
@@ -23,7 +24,6 @@ def send_email_reset_password(user_name, recipient_email, link_to_reset_password
     )
 
     verify_email_is_valid(recipient_email)
-
     send_email(recipient_email, title, text_body)
 
 
@@ -33,7 +33,6 @@ def send_email_reset_password_by_admin(user_name, recipient_email, link_to_reset
     )
 
     verify_email_is_valid(recipient_email)
-
     send_email(recipient_email, title, text_body)
 
 

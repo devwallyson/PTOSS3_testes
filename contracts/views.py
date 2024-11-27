@@ -1,38 +1,37 @@
+import logging
 import os
-from datetime import datetime
 
-from rest_framework import status
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.request import Request
-from django.http import JsonResponse
+from datetime import datetime, timedelta
+
+from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import FileResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
-from django.http import FileResponse
-
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
+from contracts.models import Contract, EnergyBill
 from universities.models import ConsumerUnit
 from users.requests_permissions import RequestsPermissions
 from utils.mixins.cache_mixin import CachedViewSetMixin
 from utils.subgroup_util import Subgroup
-from . import models
-from . import serializers
-from . import services
+
+from . import serializers, services
 
 
 class ContractViewSet(CachedViewSetMixin, ModelViewSet):
-    queryset = models.Contract.objects.all()
+    queryset = Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     cache_key_prefix = "contract_viewset"
     cache_timeout = 3600 * 6
 
     def create(self, request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.university_user_permissions
-
         body_consumer_unit_id = request.data["consumer_unit"]
 
         try:
@@ -53,7 +52,6 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
     def update(self, request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.university_user_permissions
         contract = self.get_object()
-
         university_id = contract.consumer_unit.university.id
 
         try:
@@ -68,8 +66,8 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
     def list(self, request: Request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.default_users_permissions
-
         params_serializer = serializers.ContractListParamsSerializer(data=request.GET)
+
         if not params_serializer.is_valid():
             return Response(params_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -87,7 +85,7 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
         except Exception as error:
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
-        queryset = models.Contract.objects.filter(consumer_unit=consumer_unit.id)
+        queryset = Contract.objects.filter(consumer_unit=consumer_unit.id)
         serializer = serializers.ContractSerializer(queryset, many=True, context={"request": request})
 
         return Response(serializer.data, status.HTTP_200_OK)
@@ -151,7 +149,7 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
 
 
 class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
-    queryset = models.EnergyBill.objects.all()
+    queryset = EnergyBill.objects.all()
     serializer_class = serializers.EnergyBillSerializer
     cache_key_prefix = "energybill_viewset"
     cache_timeout = 3600 * 168  # 3600 segundos * 24  = 1 dia (dados nao mudam com frequência)
@@ -173,7 +171,7 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
         if len(address) > 1000:
             return Response("Endereco is too long.", status=status.HTTP_400_BAD_REQUEST)
 
-        if models.EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
+        if EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
             return Response(
                 "There is already an energy bill this month and year for this consumer unit.",
                 status=status.HTTP_400_BAD_REQUEST,
@@ -229,7 +227,7 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
                 errors.append({"error": "Invalid date format", "data": bill_data})
                 continue
 
-            if models.EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
+            if EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
                 errors.append(
                     {
                         "error": "There is already an energy bill this month and year for this consumer unit",
@@ -238,7 +236,7 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
                 )
                 continue
 
-            if not models.EnergyBill.check_energy_bill_covered_by_contract(consumer_unit_id, date):
+            if not EnergyBill.check_energy_bill_covered_by_contract(consumer_unit_id, date):
                 errors.append({"error": "No contract covers the date of this energy bill", "data": bill_data})
                 continue
 
@@ -261,23 +259,27 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
                 serializer.save()
                 response_data.append(serializer.data)
 
-        self.delete_related_view_cache(additional_viewsets=[
-            "contracts.views.EnergyBillViewSet",
-            "contracts.views.ContractViewSet",
-            "universities.views.ConsumerUnitViewSet",
-        ])
+        self.delete_related_view_cache(
+            additional_viewsets=[
+                "contracts.views.EnergyBillViewSet",
+                "contracts.views.ContractViewSet",
+                "universities.views.ConsumerUnitViewSet",
+            ]
+        )
         return Response({"created": response_data}, status=status.HTTP_201_CREATED)
 
     @swagger_auto_schema(method="post")
     @action(detail=False, methods=["post"], url_path="upload")
     def upload_csv(self, request, *args, **kwargs):
+        logger = logging.getLogger("uc_sheet")
         energy_bill_data = []
         serializer = serializers.CSVFileSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
+        consumer_unit_id = serializer.validated_data["consumer_unit_id"]
+        logger.info(f"Consumer unit with id: {consumer_unit_id} is uploading a file")
         energy_bill_data = services.ContractServices().get_file_errors(
-            serializer.validated_data["file"], request.data.get("consumer_unit_id")
+            serializer.validated_data["file"], consumer_unit_id
         )
         return Response({"data": energy_bill_data}, status=status.HTTP_200_OK)
 
@@ -298,3 +300,24 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
             return FileResponse(open(file_path, "rb"), as_attachment=True, filename=os.path.basename(file_path))
         else:
             return Response("Document does not exist", status=400)
+
+    @action(detail=False, methods=["get"], url_path="plot-graph")
+    def plot_graph(self, request):
+        consumer_unit_id = request.GET.get("consumer_unit_id")
+
+        if not consumer_unit_id:
+            return Response({"error": "consumer_unit_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        consumer_unit = ConsumerUnit.objects.get(id=consumer_unit_id)
+        energy_bills = EnergyBill.objects.filter(
+            consumer_unit=consumer_unit_id,
+            date__gte=datetime.now().date() - timedelta(days=365),
+        ).order_by("date")
+
+        graph_data = {
+            "energy_bills": energy_bills,
+            "contract_data": consumer_unit.current_contract,
+        }
+
+        serializer = serializers.EnergyBillGraphSerializer(graph_data)
+        return Response(serializer.data, status=status.HTTP_200_OK)

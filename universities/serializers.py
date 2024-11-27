@@ -1,15 +1,25 @@
 from decimal import Decimal
 
 from rest_framework import serializers
+
 from contracts.models import Contract
 from utils.cnpj_validator_util import CnpjValidator
+
 from .models import ConsumerUnit, University
 
 
 class UniversitySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = University
-        fields = ['url', 'id', 'name', 'acronym', 'cnpj', 'is_active', 'created_on']
+        fields = [
+            "url",
+            "id",
+            "name",
+            "acronym",
+            "cnpj",
+            "is_active",
+            "created_on",
+        ]
 
     def validate_cnpj(self, cnpj: str):
         try:
@@ -24,12 +34,28 @@ class ConsumerUnitSerializer(serializers.HyperlinkedModelSerializer):
     code = serializers.CharField()
     is_active = serializers.BooleanField()
     university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all())
-    total_installed_power = serializers.DecimalField(max_digits=7, min_value=Decimal('0.00'), decimal_places=2, allow_null=True)
+    total_installed_power = serializers.DecimalField(
+        max_digits=7,
+        min_value=Decimal("0.00"),
+        decimal_places=2,
+        allow_null=True,
+    )
 
     class Meta:
         model = ConsumerUnit
-        fields = ['id', 'url', 'name', 'code', 'is_active', 'date', 'is_current_energy_bill_filled',
-                  'pending_energy_bills_number', 'university', 'total_installed_power', 'created_on']
+        fields = [
+            "id",
+            "url",
+            "name",
+            "code",
+            "is_active",
+            "date",
+            "is_current_energy_bill_filled",
+            "pending_energy_bills_number",
+            "university",
+            "total_installed_power",
+            "created_on",
+        ]
 
 
 class ListConsumerUnitSerializerForDocs(ConsumerUnitSerializer):
@@ -37,8 +63,19 @@ class ListConsumerUnitSerializerForDocs(ConsumerUnitSerializer):
 
     class Meta:
         model = ConsumerUnit
-        fields = ['id', 'url', 'name', 'code', 'is_active', 'date', 'pending_energy_bills_number',
-                  'university', 'created_on', 'is_current_energy_bill_filled', 'is_favorite']
+        fields = [
+            "id",
+            "url",
+            "name",
+            "code",
+            "is_active",
+            "date",
+            "pending_energy_bills_number",
+            "university",
+            "created_on",
+            "is_current_energy_bill_filled",
+            "is_favorite",
+        ]
 
 
 class ConsumerUnitParamsSerializer(serializers.Serializer):
@@ -59,7 +96,11 @@ class CreateContractSerializerForDocs(serializers.ModelSerializer):
 
     class Meta:
         model = Contract
-        exclude = ('consumer_unit', 'end_date', 'subgroup', )
+        exclude = (
+            "consumer_unit",
+            "end_date",
+            "subgroup",
+        )
 
 
 class EditConsumerUnitCodeSerializerForDocs(serializers.Serializer):

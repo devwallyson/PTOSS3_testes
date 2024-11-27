@@ -1,14 +1,13 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.utils.module_loading import import_string
-from django.utils.cache import add_never_cache_headers
-
 from django.core.cache import cache
+from django.utils.cache import add_never_cache_headers
+from django.utils.decorators import method_decorator
+from django.utils.module_loading import import_string
+from django.views.decorators.cache import cache_page
 
 
 class CachedViewSetMixin:
     cache_key_prefix = None
-    cache_timeout = 600 * 6  # 1 hora (600 segundos * 6) por padrão
+    cache_timeout = 600 * 6
 
     @classmethod
     def get_cache_key_prefix_from_path(cls, viewset_path):

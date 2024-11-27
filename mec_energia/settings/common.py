@@ -8,7 +8,7 @@ ALLOWED_HOSTS = []
 
 
 # APPS
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -40,7 +40,7 @@ INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APPS + LOCAL_APPS
 
 
 # TEMPLATES
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -59,7 +59,7 @@ TEMPLATES = [
 
 
 # MIDDLEWARE
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -74,7 +74,7 @@ MIDDLEWARE = [
 
 
 # GENERAL
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 ROOT_URLCONF = "mec_energia.urls"
 WSGI_APPLICATION = "mec_energia.wsgi.application"
 AUTH_USER_MODEL = "users.CustomUser"
@@ -86,7 +86,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # PASSWORD VALIDATORS
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -96,7 +96,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # INTERNATIONALIZATION
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 TIME_ZONE = "America/Sao_Paulo"
 LANGUAGE_CODE = "en-us"
 
@@ -106,7 +106,7 @@ USE_TZ = False
 
 
 # STATIC FILES & MEDIA FILES (CSS, JavaScript, Images)
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_ROOT.mkdir(parents=True, exist_ok=True)
@@ -117,7 +117,7 @@ MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 # DJANGO REST FRAMEWORK
-# ---------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 REST_FRAMEWORK = {
     "COERCE_DECIMAL_TO_STRING": False,
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -138,14 +138,14 @@ REST_FRAMEWORK = {
 
 
 # EASYAUDIT
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
+DJANGO_EASY_AUDIT_WATCH_MODEL_EVENTS = True
+DJANGO_EASY_AUDIT_WATCH_AUTH_EVENTS = True
+DJANGO_EASY_AUDIT_WATCH_REQUEST_EVENTS = True
 
-DJANGO_EASY_AUDIT_WATCH_MODEL_EVENTS = True  # Registra os eventos de modelo (criação, atualização e exclusão)
-DJANGO_EASY_AUDIT_WATCH_AUTH_EVENTS = True  # Registra eventos de autenticação do usuário (login, logout, falhas)
-DJANGO_EASY_AUDIT_WATCH_REQUEST_EVENTS = True  # Registra todas as requisições  ()
 
 # LOGGING
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOGGING = {
     "version": 1,
@@ -182,6 +182,19 @@ LOGGING = {
             "backupCount": 5,  # 5 files = 50MB total
             "formatter": "verbose",
         },
+        "uc_sheet_logfile": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "uc_sheet.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 5,  # 5 files = 50MB total
+            "formatter": "verbose",
+        },
+        "tasks": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "tasks.log",
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "formatter": "middle",
+        },
     },
     "loggers": {
         "django": {
@@ -204,12 +217,21 @@ LOGGING = {
             "level": "INFO",
             "propagate": False,
         },
+        "uc_sheet": {
+            "handlers": ["console", "uc_sheet_logfile"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "tasks": {
+            "handlers": ["console", "tasks"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 
-
 # MEC ENERGIA
-# ------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
 # Parâmetros de recomendação de contrato
 MINIMUM_ENERGY_BILLS_FOR_RECOMMENDATION = 6
 IDEAL_ENERGY_BILLS_FOR_RECOMMENDATION = 12

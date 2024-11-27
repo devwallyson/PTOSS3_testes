@@ -68,7 +68,6 @@ class CustomUserAdmin(UserAdmin):
 
     get_full_name.short_description = "Full Name"
 
-
     def activate_users(self, request, queryset):
         updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} usuários foram ativados com sucesso.", messages.SUCCESS)
@@ -131,7 +130,7 @@ class UniversityUserAdmin(CustomUserAdmin):
         elif obj.account_password_status == "first_access":
             return format_html('<span style="color: orange;">✓ First Access</span>')
         else:
-            return format_html('<span style="color: red;">✗ {obj.account_password_status} </span>')
+            return format_html(f'<span style="color: red;">✗ {obj.account_password_status} </span>')
 
     get_password_status.short_description = "Password Status"
     get_password_status.admin_order_field = "account_password_status"

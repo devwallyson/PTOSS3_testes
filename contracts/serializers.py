@@ -1,54 +1,110 @@
 from rest_framework import serializers
 
-from universities.models import ConsumerUnit, Contract
-from tariffs.models import Distributor
+from contracts.models import Contract, EnergyBill
 from contracts.validators import CsvFileValidator
-from . import models
+from tariffs.models import Distributor
+from universities.models import ConsumerUnit
+
 
 class ContractSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
     subgroup = serializers.CharField()
     end_date = serializers.DateField(read_only=True)
-
-    consumer_unit = serializers.PrimaryKeyRelatedField(
-        queryset=ConsumerUnit.objects.all())
-    distributor = serializers.PrimaryKeyRelatedField(
-        queryset=Distributor.objects.all())
+    consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
+    distributor = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
 
     class Meta:
-        model = models.Contract
-        fields = fields = ['url', 'id', 'consumer_unit', 'distributor', 'start_date', 'end_date', 'tariff_flag',
-                           'subgroup', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
+        model = Contract
+        fields = fields = [
+            "url",
+            "id",
+            "consumer_unit",
+            "distributor",
+            "start_date",
+            "end_date",
+            "tariff_flag",
+            "subgroup",
+            "peak_contracted_demand_in_kw",
+            "off_peak_contracted_demand_in_kw",
+        ]
 
 
 class ContractListSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
     subgroup = serializers.CharField(read_only=True)
     end_date = serializers.DateField(read_only=True)
-
-    consumer_unit = serializers.PrimaryKeyRelatedField(
-        queryset=ConsumerUnit.objects.all())
-    distributor = serializers.PrimaryKeyRelatedField(
-        queryset=Distributor.objects.all())
-    distributor_name = serializers.CharField(source='get_distributor_name')
+    consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
+    distributor = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
+    distributor_name = serializers.CharField(source="get_distributor_name")
 
     class Meta:
-        model = models.Contract
-        fields = fields = ['url', 'id', 'consumer_unit', 'distributor', 'distributor_name', 'start_date', 'end_date', 'tariff_flag',
-                           'subgroup', 'peak_contracted_demand_in_kw', 'off_peak_contracted_demand_in_kw']
+        model = Contract
+        fields = fields = [
+            "url",
+            "id",
+            "consumer_unit",
+            "distributor",
+            "distributor_name",
+            "start_date",
+            "end_date",
+            "tariff_flag",
+            "subgroup",
+            "peak_contracted_demand_in_kw",
+            "off_peak_contracted_demand_in_kw",
+        ]
 
 
 class EnergyBillSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
-
-    contract = serializers.PrimaryKeyRelatedField(
-        queryset=Contract.objects.all())
-    consumer_unit = serializers.PrimaryKeyRelatedField(
-        queryset=ConsumerUnit.objects.all())
+    contract = serializers.PrimaryKeyRelatedField(queryset=Contract.objects.all())
+    consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
 
     class Meta:
-        model = models.EnergyBill
-        fields = '__all__'
+        model = EnergyBill
+        fields = "__all__"
+
+
+class ContractDemandSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contract
+        fields = [
+            "peak_contracted_demand_in_kw",
+            "off_peak_contracted_demand_in_kw",
+        ]
+
+
+class EnergyBillListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EnergyBill
+        fields = [
+            "date",
+            "is_atypical",
+            "peak_consumption_in_kwh",
+            "off_peak_consumption_in_kwh",
+            "peak_measured_demand_in_kw",
+            "off_peak_measured_demand_in_kw",
+        ]
+
+
+# invoice_in_reais = models.DecimalField(de
+
+
+class EnergyBillGraphSerializer(serializers.Serializer):
+    contract_data = ContractDemandSerializer(read_only=True)
+    energy_bills = EnergyBillListSerializer(many=True, read_only=True)
+
+    def to_representation(self, instance):
+        repr = super().to_representation(instance)
+        bills = repr.pop("energy_bills")
+        consumption_history_plot = {
+            "date": [bill["date"] for bill in bills],
+            "peak_consumption_in_kwh": [bill["peak_consumption_in_kwh"] for bill in bills],
+            "off_peak_consumption_in_kwh": [bill["off_peak_consumption_in_kwh"] for bill in bills],
+            "peak_measured_demand_in_kw": [bill["peak_measured_demand_in_kw"] for bill in bills],
+            "off_peak_measured_demand_in_kw": [bill["off_peak_measured_demand_in_kw"] for bill in bills],
+        }
+        repr["consumption_history_plot"] = consumption_history_plot
+        return repr
 
 
 class ContractListParamsSerializer(serializers.Serializer):
@@ -99,5 +155,4 @@ class CSVFileSerializer(serializers.Serializer):
 
     def validate_file(self, file):
         validator = CsvFileValidator()
-        df = validator(file)
-        return df
+        return validator(file)
