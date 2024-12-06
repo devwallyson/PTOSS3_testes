@@ -1,11 +1,12 @@
 from decimal import Decimal
 
+from django.db import transaction
 from rest_framework import serializers
 
 from contracts.models import Contract
+from contracts.serializers import ContractSerializer
+from universities.models import ConsumerUnit, University
 from utils.cnpj_validator_util import CnpjValidator
-
-from .models import ConsumerUnit, University
 
 
 class UniversitySerializer(serializers.HyperlinkedModelSerializer):
@@ -88,36 +89,55 @@ class UniversityUserAuthenticatedSerializerForDocs(serializers.ModelSerializer):
     is_active = serializers.BooleanField()
 
 
-class CreateContractSerializerForDocs(serializers.ModelSerializer):
-    start_date = serializers.DateField()
-    tariff_flag = serializers.CharField()
-    peak_contracted_demand_in_kw = serializers.DecimalField(decimal_places=2, max_digits=10)
-    off_peak_contracted_demand_in_kw = serializers.DecimalField(decimal_places=2, max_digits=10)
-
+class ConsumerUnitCreateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Contract
-        exclude = (
-            "consumer_unit",
-            "end_date",
-            "subgroup",
-        )
+        model = ConsumerUnit
+        fields = [
+            "id",
+            "name",
+            "code",
+            "university",
+            "total_installed_power",
+            "is_active",
+            "created_on",
+        ]
+        read_only_fields = ["created_on"]
 
 
-class EditConsumerUnitCodeSerializerForDocs(serializers.Serializer):
-    consumer_unit_id = serializers.IntegerField()
-    code = serializers.CharField()
+class ConsumerUnitWithContractSerializer(serializers.Serializer):
+    consumer_unit = ConsumerUnitCreateSerializer()
+    contract = ContractSerializer()
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            self.fields["consumer_unit"] = ConsumerUnitCreateSerializer(instance=self.instance)
+            self.fields["contract"] = ContractSerializer(instance=self.instance.current_contract)
 
-class CreateConsumerUnitAndContractSerializerForDocs(serializers.Serializer):
-    consumer_unit = ConsumerUnitSerializer()
-    contract = CreateContractSerializerForDocs()
+    @transaction.atomic
+    def create(self, validated_data):
+        consumer_unit_data = validated_data.pop("consumer_unit")
+        contract_data = validated_data.pop("contract")
+        consumer_unit = ConsumerUnit.objects.create(**consumer_unit_data)
+        contract = Contract.objects.create(consumer_unit=consumer_unit, **contract_data)
 
+        return {"consumer_unit": consumer_unit, "contract": contract}
 
-class EditConsumerUnitAndContractSerializerForDocs(serializers.Serializer):
-    consumer_unit = ConsumerUnitSerializer()
-    contract = CreateContractSerializerForDocs()
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        contract_data = validated_data.pop("contract")
+        consumer_unit_data = validated_data.pop("consumer_unit")
 
+        consumer_unit = instance
+        for attr, value in consumer_unit_data.items():
+            setattr(consumer_unit, attr, value)
+        consumer_unit.save()
 
-class EditConsumerUnitCodeAndCreateContractSerializerForDocs(serializers.Serializer):
-    consumer_unit = EditConsumerUnitCodeSerializerForDocs()
-    contract = CreateContractSerializerForDocs()
+        contract = consumer_unit.current_contract
+
+        for attr, value in contract_data.items():
+            if attr != "contract_id":
+                setattr(contract, attr, value)
+        contract.save()
+
+        return {"consumer_unit": consumer_unit, "contract": contract}

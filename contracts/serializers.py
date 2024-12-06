@@ -6,17 +6,10 @@ from tariffs.models import Distributor
 from universities.models import ConsumerUnit
 
 
-class ContractSerializer(serializers.HyperlinkedModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    subgroup = serializers.CharField()
-    end_date = serializers.DateField(read_only=True)
-    consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
-    distributor = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
-
+class ContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
-        fields = fields = [
-            "url",
+        fields = [
             "id",
             "consumer_unit",
             "distributor",
@@ -27,6 +20,18 @@ class ContractSerializer(serializers.HyperlinkedModelSerializer):
             "peak_contracted_demand_in_kw",
             "off_peak_contracted_demand_in_kw",
         ]
+        read_only_fields = ["end_date"]
+        extra_kwargs = {
+            "consumer_unit": {"required": False},
+        }
+
+    def validate(self, attrs):
+        peak_contracted_demand_in_kw = attrs.get("peak_contracted_demand_in_kw")
+        off_peak_contracted_demand_in_kw = attrs.get("off_peak_contracted_demand_in_kw")
+
+        if peak_contracted_demand_in_kw < 30 or off_peak_contracted_demand_in_kw < 30:
+            raise serializers.ValidationError("Um contrato não pode ter valores de demanda inferiores a 30kW")
+        return attrs
 
 
 class ContractListSerializer(serializers.HyperlinkedModelSerializer):
