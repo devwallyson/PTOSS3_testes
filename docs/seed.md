@@ -33,6 +33,15 @@ Seed Demo:
 ./scripts/seed_demo.sh
 ```
 
+Seed Teste de Usabilidade
+```sh
+./scripts/seed_ut.sh
+```
+Exemplo: Criar 20 universidades para teste
+```sh
+docker exec mepa-api bash -c "./scripts/seed_ut.sh 20"
+```
+ 
 Apagar os dados do banco de dados:
 
 ```sh

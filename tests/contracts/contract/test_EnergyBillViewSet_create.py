@@ -47,6 +47,8 @@ class TestEnergyBillViewSetTests:
             "end_date": "2023-12-31",  # Adicione a data de término do contrato
             "subgroup": "A2",
             "distributor": self.distributor.id,
+            "peak_contracted_demand_in_kw": 33,
+            "off_peak_contracted_demand_in_kw": 33,
         }
         contract_response = self.client.post("/api/contracts/", contract_data, format="json")
         created_contract = json.loads(contract_response.content)
@@ -134,6 +136,8 @@ class TestEnergyBillViewSetTests:
             "end_date": "2023-12-31",  # Adicione a data de término do contrato
             "subgroup": "A2",
             "distributor": self.distributor.id,
+            "peak_contracted_demand_in_kw": 33,
+            "off_peak_contracted_demand_in_kw": 33,
         }
         contract_response = self.client.post("/api/contracts/", contract_data, format="json")
         created_contract = json.loads(contract_response.content)
@@ -184,6 +188,8 @@ class TestEnergyBillViewSetTests:
             "end_date": "2023-12-31",
             "subgroup": "A2",
             "distributor": self.distributor.id,
+            "peak_contracted_demand_in_kw": 33,
+            "off_peak_contracted_demand_in_kw": 33,
         }
         contract_response = self.client.post("/api/contracts/", contract_data, format="json")
         created_contract = json.loads(contract_response.content)
@@ -239,6 +245,8 @@ class TestEnergyBillViewSetTests:
             "end_date": "2023-12-31",
             "subgroup": "A2",
             "distributor": self.distributor.id,
+            "peak_contracted_demand_in_kw": 33,
+            "off_peak_contracted_demand_in_kw": 33,
         }
         contract_response = self.client.post("/api/contracts/", contract_data, format="json")
         created_contract = json.loads(contract_response.content)
@@ -294,6 +302,8 @@ class TestEnergyBillViewSetTests:
             "end_date": "2023-12-31",
             "subgroup": "A2",
             "distributor": self.distributor.id,
+            "peak_contracted_demand_in_kw": 33,
+            "off_peak_contracted_demand_in_kw": 33,
         }
         contract_response = self.client.post("/api/contracts/", contract_data, format="json")
         created_contract = json.loads(contract_response.content)

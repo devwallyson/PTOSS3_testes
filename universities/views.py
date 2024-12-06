@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg.utils import swagger_auto_schema
@@ -8,12 +7,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from universities import serializers
+from universities.models import ConsumerUnit, University
+from universities.serializers import (
+    ConsumerUnitWithContractSerializer,
+)
 from users.models import CustomUser, UniversityUser
 from users.requests_permissions import RequestsPermissions
 from utils.mixins.cache_mixin import CachedViewSetMixin
-
-from . import serializers
-from .models import ConsumerUnit, University
 
 
 class UniversityViewSet(CachedViewSetMixin, ModelViewSet):
@@ -21,7 +22,7 @@ class UniversityViewSet(CachedViewSetMixin, ModelViewSet):
     serializer_class = serializers.UniversitySerializer
     http_method_names = ["post", "put", "get"]
     cache_key_prefix = "university_viewset"
-    cache_timeout = 3600 * 168  # 3600 segundos * 168 (dados raramente mudam)
+    cache_timeout = 3600 * 168
 
     def create(self, request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.super_user_permissions
@@ -79,7 +80,7 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
     serializer_class = serializers.ConsumerUnitSerializer
     http_method_names = ["get", "post", "put"]
     cache_key_prefix = "consumer_units_viewset"
-    cache_timeout = 3600 * 168  # 3600 segundos * 168 (dados raramente mudam)
+    cache_timeout = 3600 * 168
 
     def create(self, request, *args, **kwargs):
         user_types_with_permission = RequestsPermissions.university_user_permissions
@@ -177,81 +178,48 @@ class ConsumerUnitViewSet(CachedViewSetMixin, ModelViewSet):
 
         return Response(consumer_unit, status.HTTP_200_OK)
 
-    @swagger_auto_schema(request_body=serializers.CreateConsumerUnitAndContractSerializerForDocs)
+    @swagger_auto_schema(request_body=ConsumerUnitWithContractSerializer)
     @action(detail=False, methods=["post"])
     def create_consumer_unit_and_contract(self, request):
-        user_types_with_permission = RequestsPermissions.university_user_permissions
-        data = request.data
-
-        params_serializer = serializers.CreateConsumerUnitAndContractSerializerForDocs(data=request.data)
-        if not params_serializer.is_valid():
-            return Response(params_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            body_university_id = data["consumer_unit"]["university"]
-
+            user_types_with_permission = RequestsPermissions.university_user_permissions
+            body_university_id = request.data["consumer_unit"]["university"]
             RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, body_university_id)
         except Exception as error:
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
+        serializer = ConsumerUnitWithContractSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        self.delete_related_view_cache(
+            additional_viewsets=[
+                "contracts.views.ContractViewSet",
+                "universities.views.ConsumerUnitViewSet",
+            ]
+        )
+        return Response(serializer.data, status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(request_body=ConsumerUnitWithContractSerializer)
+    @action(detail=True, methods=["put"])
+    def edit_consumer_unit_and_contract(self, request, pk=None):
         try:
-            created_uc, _ = ConsumerUnit.create_consumer_unit_and_contract(data["consumer_unit"], data["contract"])
-
-            serializer = serializers.ConsumerUnitSerializer(created_uc, context={"request": request})
-
-            self.delete_related_view_cache(
-                additional_viewsets=["contracts.views.ContractViewSet", "universities.views.ConsumerUnitViewSet"]
-            )
-
-            return Response(serializer.data, status.HTTP_201_CREATED)
-        except Exception as error:
-            raise Exception(str(error)) from error
-
-    @swagger_auto_schema(request_body=serializers.CreateConsumerUnitAndContractSerializerForDocs)
-    @action(detail=False, methods=["post"])
-    def edit_consumer_unit_and_contract(self, request):
-        user_types_with_permission = RequestsPermissions.university_user_permissions
-        data = request.data
-
-        try:
-            body_university_id = data["consumer_unit"]["university"]
-
+            user_types_with_permission = RequestsPermissions.university_user_permissions
+            body_university_id = request.data["consumer_unit"]["university"]
             RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, body_university_id)
         except Exception as error:
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-        try:
-            ConsumerUnit.edit_consumer_unit_and_contract(data["consumer_unit"], data["contract"])
 
-            self.delete_related_view_cache(
-                additional_viewsets=["contracts.views.ContractViewSet", "universities.views.ConsumerUnitViewSet"]
-            )
+        consumer_unit_instance = self.get_object()
+        serializer = ConsumerUnitWithContractSerializer(consumer_unit_instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-            return Response({"message": "Consumer Unit and Contract edited successfully"}, status=status.HTTP_200_OK)
-        except ValidationError as error:
-            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+        self.delete_related_view_cache(
+            additional_viewsets=[
+                "contracts.views.ContractViewSet",
+                "universities.views.ConsumerUnitViewSet",
+            ]
+        )
 
-    @swagger_auto_schema(request_body=serializers.EditConsumerUnitCodeAndCreateContractSerializerForDocs)
-    @action(detail=False, methods=["post"])
-    def edit_consumer_unit_code_and_create_contract(self, request):
-        user_types_with_permission = RequestsPermissions.university_user_permissions
-        data = request.data
-
-        try:
-            body_consumer_unit_id = data["consumer_unit"]["consumer_unit_id"]
-            university = ConsumerUnit.objects.get(id=body_consumer_unit_id)
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university.id)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
-        try:
-            ConsumerUnit.edit_consumer_unit_code_and_create_contract(data["consumer_unit"], data["contract"])
-            self.delete_related_view_cache(
-                additional_viewsets=["contracts.views.ContractViewSet", "universities.views.ConsumerUnitViewSet"]
-            )
-
-            return Response(
-                {"message": "Consumer Unit edited and Contract created successfully"},
-                status=status.HTTP_200_OK,
-            )
-        except ValidationError as error:
-            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status.HTTP_201_CREATED)

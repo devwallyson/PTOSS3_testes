@@ -41,10 +41,6 @@ class Contract(models.Model):
     def __str__(self):
         return f"{self.distributor.name} - {self.distributor.university.acronym} ({self.start_date})"
 
-    @classmethod
-    def check_is_valid_peak_demand_values(cls, peak_contracted_demand_in_kw, off_peak_contracted_demand_in_kw):
-        if peak_contracted_demand_in_kw < 30 or off_peak_contracted_demand_in_kw < 30:
-            raise Exception("Um contrato não pode ter valores de demanda inferiores a 30kW")
 
     def check_start_date_create_contract(self):
         if self.consumer_unit.current_contract:

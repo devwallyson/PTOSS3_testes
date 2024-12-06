@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -129,102 +129,6 @@ class ConsumerUnit(models.Model):
             updated_consumer_unit_list.append(unit_dict)
 
         return updated_consumer_unit_list
-
-    @classmethod
-    def create_consumer_unit_and_contract(cls, data_consumer_unit, data_contract):
-        created_consumer_unit = None
-
-        try:
-            Contract.check_is_valid_peak_demand_values(
-                data_contract["peak_contracted_demand_in_kw"], data_contract["off_peak_contracted_demand_in_kw"]
-            )
-
-            created_consumer_unit = ConsumerUnit(
-                university_id=data_consumer_unit["university"],
-                name=data_consumer_unit["name"],
-                code=data_consumer_unit["code"],
-                is_active=data_consumer_unit["is_active"],
-                total_installed_power=data_consumer_unit["total_installed_power"],
-            )
-
-            created_contract = Contract(
-                consumer_unit=created_consumer_unit,
-                distributor_id=data_contract["distributor"],
-                start_date=data_contract["start_date"],
-                tariff_flag=data_contract["tariff_flag"],
-                peak_contracted_demand_in_kw=data_contract["peak_contracted_demand_in_kw"],
-                off_peak_contracted_demand_in_kw=data_contract["off_peak_contracted_demand_in_kw"],
-            )
-        except Exception as error:
-            raise Exception(f"error create consumer unit and contract: {str(error)}") from error
-
-        created_consumer_unit.save()
-        created_contract.save()
-        return created_consumer_unit, created_contract
-
-    @classmethod
-    def edit_consumer_unit_and_contract(cls, data_consumer_unit, data_contract):
-        try:
-            Contract.check_is_valid_peak_demand_values(
-                data_contract["peak_contracted_demand_in_kw"], data_contract["off_peak_contracted_demand_in_kw"]
-            )
-
-            consumer_unit = ConsumerUnit.objects.get(id=data_consumer_unit["consumer_unit_id"])
-
-            if not consumer_unit:
-                raise Exception("Consumer Unit not exist")
-
-            consumer_unit.name = data_consumer_unit["name"]
-            consumer_unit.code = data_consumer_unit["code"]
-            consumer_unit.is_active = data_consumer_unit["is_active"]
-            consumer_unit.total_installed_power = data_consumer_unit["total_installed_power"]
-            consumer_unit.save()
-            contract = Contract.objects.get(id=data_contract["contract_id"])
-
-            if not contract:
-                raise Exception("Contract not exist")
-
-            contract.distributor_id = data_contract["distributor"]
-            contract.start_date = datetime.strptime(data_contract["start_date"], "%Y-%m-%d").date()
-            contract.tariff_flag = data_contract["tariff_flag"]
-            contract.subgroup = data_contract["subgroup"]
-            contract.peak_contracted_demand_in_kw = data_contract["peak_contracted_demand_in_kw"]
-            contract.off_peak_contracted_demand_in_kw = data_contract["off_peak_contracted_demand_in_kw"]
-            contract.check_start_date_edit_contract()
-            contract.check_tariff_flag_is_valid()
-            contract.save()
-
-        except Exception as error:
-            raise Exception(f"error edit consumer unit and contract: {str(error)}") from error
-
-        return consumer_unit, contract
-
-    @classmethod
-    def edit_consumer_unit_code_and_create_contract(cls, data_consumer_unit, data_contract):
-        try:
-            Contract.check_is_valid_peak_demand_values(
-                data_contract["peak_contracted_demand_in_kw"],
-                data_contract["off_peak_contracted_demand_in_kw"],
-            )
-
-            consumer_unit = ConsumerUnit.objects.filter(id=data_consumer_unit["consumer_unit_id"]).update(
-                code=data_consumer_unit["code"],
-            )
-
-            created_contract = Contract(
-                consumer_unit=consumer_unit.first(),
-                distributor_id=data_contract["distributor"],
-                start_date=data_contract["start_date"],
-                tariff_flag=data_contract["tariff_flag"],
-                subgroup=data_contract["subgroup"],
-                peak_contracted_demand_in_kw=data_contract["peak_contracted_demand_in_kw"],
-                off_peak_contracted_demand_in_kw=data_contract["off_peak_contracted_demand_in_kw"],
-            )
-        except Exception as error:
-            raise Exception(f"error create consumer unit and contract: {str(error)}") from error
-
-        created_contract.save()
-        return consumer_unit, created_contract
 
     def get_energy_bills_by_year(self, year):
         if year < self.date.year or year > date.today().year:
