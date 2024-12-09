@@ -33,8 +33,8 @@ class Contract(models.Model):
     end_date = models.DateField(null=True, blank=True)
     tariff_flag = models.CharField(choices=tariff_flag_choices, max_length=1, null=True, blank=True)
     subgroup = models.CharField(max_length=3, null=True, blank=True)
-    peak_contracted_demand_in_kw = models.DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
-    off_peak_contracted_demand_in_kw = models.DecimalField(decimal_places=2, max_digits=10, null=True, blank=True)
+    peak_contracted_demand_in_kw = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True)
+    off_peak_contracted_demand_in_kw = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True)
 
     objects = ContractManager()
 
