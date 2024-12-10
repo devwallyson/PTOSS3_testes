@@ -1,10 +1,9 @@
-from datetime import datetime, date
-from rest_framework.exceptions import ValidationError
-
+from datetime import date
 from decimal import Decimal
 
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from contracts.models import Contract
 from contracts.serializers import ContractSerializer
