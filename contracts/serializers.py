@@ -29,7 +29,6 @@ class ContractSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
-        
         if "start_date" not in attrs:
             raise serializers.ValidationError({"start_date": "This field is required."})
 
