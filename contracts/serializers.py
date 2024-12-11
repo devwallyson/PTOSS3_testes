@@ -25,9 +25,14 @@ class ContractSerializer(serializers.ModelSerializer):
         read_only_fields = ["end_date"]
         extra_kwargs = {
             "consumer_unit": {"required": False},
+            "start_date": {"required": True},
         }
 
     def validate(self, attrs):
+        
+        if "start_date" not in attrs:
+            raise serializers.ValidationError({"start_date": "This field is required."})
+
         peak_contracted_demand_in_kw = attrs.get("peak_contracted_demand_in_kw")
         off_peak_contracted_demand_in_kw = attrs.get("off_peak_contracted_demand_in_kw")
 
