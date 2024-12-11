@@ -40,8 +40,6 @@ class ContractSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_start_date(self, value):
-        if value is None:
-            raise serializers.ValidationError("The start date is required")
 
         if value > date.today():
             raise serializers.ValidationError("The start date cannot be in the future")
