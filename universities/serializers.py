@@ -1,9 +1,7 @@
-from datetime import date
 from decimal import Decimal
 
 from django.db import transaction
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from contracts.models import Contract
 from contracts.serializers import ContractSerializer
@@ -115,15 +113,6 @@ class ConsumerUnitWithContractSerializer(serializers.Serializer):
         if self.instance:
             self.fields["consumer_unit"] = ConsumerUnitCreateSerializer(instance=self.instance)
             self.fields["contract"] = ContractSerializer(instance=self.instance.current_contract)
-
-    def validate(self, data):
-        contract_data = data.get("contract", {})
-        start_date = contract_data.get("start_date")
-
-        if start_date and start_date > date.today():
-            raise ValidationError({"contract": ["The start date of the contract cannot be in the future."]})
-
-        return data
 
     @transaction.atomic
     def create(self, validated_data):
