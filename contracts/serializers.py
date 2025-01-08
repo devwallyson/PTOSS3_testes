@@ -1,3 +1,5 @@
+from datetime import date
+
 from rest_framework import serializers
 
 from contracts.models import Contract, EnergyBill
@@ -23,15 +25,25 @@ class ContractSerializer(serializers.ModelSerializer):
         read_only_fields = ["end_date"]
         extra_kwargs = {
             "consumer_unit": {"required": False},
+            "start_date": {"required": True},
         }
 
     def validate(self, attrs):
+        if "start_date" not in attrs:
+            raise serializers.ValidationError({"start_date": "This field is required."})
+
         peak_contracted_demand_in_kw = attrs.get("peak_contracted_demand_in_kw")
         off_peak_contracted_demand_in_kw = attrs.get("off_peak_contracted_demand_in_kw")
 
         if peak_contracted_demand_in_kw < 30 or off_peak_contracted_demand_in_kw < 30:
             raise serializers.ValidationError("Um contrato não pode ter valores de demanda inferiores a 30kW")
         return attrs
+
+    def validate_start_date(self, value):
+
+        if value > date.today():
+            raise serializers.ValidationError("The start date cannot be in the future")
+        return value
 
 
 class ContractListSerializer(serializers.HyperlinkedModelSerializer):
