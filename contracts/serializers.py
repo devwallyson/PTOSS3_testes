@@ -37,14 +37,24 @@ class ContractSerializer(serializers.ModelSerializer):
 
         if peak_contracted_demand_in_kw < 30 or off_peak_contracted_demand_in_kw < 30:
             raise serializers.ValidationError("Um contrato não pode ter valores de demanda inferiores a 30kW")
+
+        # Validação usando as choices do modelo
+        tariff_flag = attrs.get("tariff_flag")
+        subgroup = attrs.get("subgroup")
+
+        for field in ["tariff_flag", "subgroup"]:
+            choices = dict(getattr(Contract, f"{field}_choices"))
+            if (value := locals()[field]) and value not in choices:
+                raise serializers.ValidationError({
+                    field:f"Invalid value '{value}'. Allowed values are: {list(choices.keys())}"})
+
+
         return attrs
 
     def validate_start_date(self, value):
-
         if value > date.today():
             raise serializers.ValidationError("The start date cannot be in the future")
         return value
-
 
 class ContractListSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)

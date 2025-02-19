@@ -27,12 +27,21 @@ class Contract(models.Model):
         ("B", "Azul"),
     )
 
+    subgroup_choices = (
+        ("A1", "≥ 230 kV"),
+        ("A2", "de 88 kV a 138 kV"),
+        ("A3", "de 69 kV"),
+        ("A3a", "de 30 kV a 44 kV"),
+        ("A4", "de 2,3 kV a 25 kV"),
+        ("AS", "< a 2,3 kV, a partir de sistema subterrâneo de distribuição"),
+    )
+
     consumer_unit = models.ForeignKey("universities.ConsumerUnit", on_delete=models.PROTECT)
     distributor = models.ForeignKey("tariffs.Distributor", related_name="contracts", on_delete=models.PROTECT)
     start_date = models.DateField(default=date.today, null=False, blank=False)
     end_date = models.DateField(null=True, blank=True)
     tariff_flag = models.CharField(choices=tariff_flag_choices, max_length=1, null=True, blank=True)
-    subgroup = models.CharField(max_length=3, null=True, blank=True)
+    subgroup = models.CharField(choices=subgroup_choices, max_length=3, null=True, blank=True)
     peak_contracted_demand_in_kw = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True)
     off_peak_contracted_demand_in_kw = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True)
 

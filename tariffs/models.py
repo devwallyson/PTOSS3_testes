@@ -22,7 +22,17 @@ class Distributor(models.Model):
     )
 
     class Meta:
-        unique_together = ["university", "cnpj"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["university", "cnpj"],
+                name="unique_distributor_university_cnpj"
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        """Garante que as validações do modelo sejam aplicadas antes de salvar"""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name

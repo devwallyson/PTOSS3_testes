@@ -49,3 +49,10 @@ class TestTariff:
         with pytest.raises(Exception) as e:
             tariff.as_green_tariff()
         assert "Cannot convert" in str(e.value)
+
+    def test_create_tariff_with_invalid_data(self):
+        invalid_tariff_dict = {"invalid_field": "invalid_value"}
+
+        with pytest.raises(Exception) as e:
+            create_objects_test_utils.create_test_blue_tariff(invalid_tariff_dict, self.distributor)
+        assert "subgroup" in str(e.value)

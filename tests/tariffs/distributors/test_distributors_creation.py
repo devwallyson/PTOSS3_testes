@@ -2,6 +2,7 @@ import json
 
 import pytest
 
+from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -32,15 +33,17 @@ class TestTariff:
         }
 
     def test_can_create_the_same_distributor_for_different_universities(self):
-        dis_1 = {"name": "Dis 1", "cnpj": "00038174000143", "university_id": self.university.id}
-        dis_2 = {"name": "Dis 2", "cnpj": "00038174000143", "university_id": self.university.id}
-        univ_2 = {"name": "Universidade de Brasília", "cnpj": "00038174000143"}
+        dis_1 = {"name": "Dis 1", "cnpj": "00038174000143", "university": self.university}
 
-        University.objects.create(**univ_2)
+        # Criar uma nova universidade
+        university_2 = University.objects.create(name="Universidade de Brasília")
+        dis_2 = {"name": "Dis 2", "cnpj": "00038174000143", "university": university_2}
 
+        # Criar a primeira distribuidora
         Distributor.objects.create(**dis_1)
-        with pytest.raises(IntegrityError):
-            Distributor.objects.create(**dis_2)
+
+        # Criar a segunda distribuidora na nova universidade (não deve dar erro)
+        Distributor.objects.create(**dis_2)
 
     def test_can_create_distributors_for_different_universities(self):
         university_2 = University.objects.create(name="Universidade de Brasília", cnpj="00038174000143")
@@ -61,9 +64,13 @@ class TestTariff:
         assert "name" in response_data.keys()
 
     def test_create_distributor_with_duplicate_cnpj(self):
-        distributor_1 = {"name": "Dis 1", "cnpj": "01083200000118", "university": self.university}
-        distributor_2 = {"name": "Dis 2", "cnpj": "01083200000118", "university": self.university}
+        distributor_1 = Distributor(name="Dis 1", cnpj="01083200000118", university=self.university)
+        distributor_1.full_clean()
+        distributor_1.save()
 
-        Distributor.objects.create(**distributor_1)
-        with pytest.raises(IntegrityError):
-            Distributor.objects.create(**distributor_2)
+        distributor_2 = Distributor(name="Dis 2", cnpj="01083200000118", university=self.university)
+
+        # Garantir que a validação é chamada corretamente
+        with pytest.raises(ValidationError, match="Distributor with this University and CNPJ already exists."):
+            distributor_2.full_clean()
+            distributor_2.save()

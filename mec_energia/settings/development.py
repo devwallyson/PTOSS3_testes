@@ -55,11 +55,14 @@ RESET_PASSWORD_TOKEN_TIMEOUT = env.int("RESET_PASSWORD_TOKEN_TIMEOUT")
 RESEND_EMAIL_RESET_PASSWORD_TIMEOUT = env.int("RESEND_EMAIL_RESET_PASSWORD_TIMEOUT")
 
 # Configurações do servidor SMTP
-SMTP_EMAIL_SERVER = env("SMTP_EMAIL_SERVER")
-SMTP_EMAIL_PORT = env("SMTP_EMAIL_PORT")
-SMTP_EMAIL_USER = env("SMTP_EMAIL_USER")
-SMTP_EMAIL_PASSWORD = env("SMTP_EMAIL_PASSWORD")
-
+EMAIL_HOST = env("EMAIL_HOST", default="mailpit")
+EMAIL_PORT = env.int("EMAIL_PORT", default=1025)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST_USER = env("SMTP_EMAIL_USER", default="")
+EMAIL_HOST_PASSWORD = env("SMTP_EMAIL_PASSWORD", default="")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
+EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=False)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or "no-reply@meusite.com"
 
 # DEBUG TOOLBAR
 # -------------------------------------------------------------------------------------
