@@ -74,6 +74,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.tool-versions
 
 # Code Quality Tools (mypy, flake8, black, isort, etc)
 .mypy_cache/
