@@ -1,7 +1,9 @@
+
 import logging
 import os
 
 from datetime import datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -218,6 +220,11 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
         response_data = []
         errors = []
 
+        def round_value(value):
+            if isinstance(value, int | float | Decimal):
+                return str(Decimal(value).quantize(Decimal("1.00"), rounding=ROUND_HALF_UP))
+            return value
+
         for bill_data in energy_bills_data:
             date_str = bill_data.get("date")
 
@@ -243,6 +250,8 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
             bill_data["consumer_unit"] = consumer_unit_id
             bill_data["contract"] = contract_id
 
+            bill_data = {key: round_value(value) for key, value in bill_data.items()}
+
             serializer = self.get_serializer(data=bill_data)
             if not serializer.is_valid():
                 errors.append({"error": "Validation error", "data": bill_data, "details": serializer.errors})
@@ -253,6 +262,8 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
         for bill_data in energy_bills_data:
             bill_data["consumer_unit"] = consumer_unit_id
             bill_data["contract"] = contract_id
+
+            bill_data = {key: round_value(value) for key, value in bill_data.items()}
 
             serializer = self.get_serializer(data=bill_data)
             if serializer.is_valid():
