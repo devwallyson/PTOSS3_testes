@@ -156,31 +156,101 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
     cache_key_prefix = "energybill_viewset"
     cache_timeout = 3600 * 168  # 3600 segundos * 24  = 1 dia (dados nao mudam com frequência)
 
-    def create(self, request, *args, **kwargs):
-        consumer_unit_id = request.data.get("consumer_unit")
-        date_str = request.data.get("date")
-        anotacoes = request.data.get("anotacoes", "")
-        address = request.data.get("address", "")
+    def retrieve(self, request, pk=None):
+        energy_bill = self.get_object()
+        consumer_unit = energy_bill.consumer_unit
 
         try:
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        except ValueError:
-            return Response('Invalid date, try this format: "yyyy-mm-dd".', status=status.HTTP_400_BAD_REQUEST)
+            RequestsPermissions.check_request_permissions(
+                request.user,
+                RequestsPermissions.default_users_permissions,
+                consumer_unit.university.id
+            )
+        except Exception as error:
+            return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
 
-        if len(anotacoes) > 1000:  # comprimento máximo
-            return Response("Anotacoes is too long.", status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(energy_bill)
+        return Response(serializer.data)
 
-        if len(address) > 1000:
-            return Response("Endereco is too long.", status=status.HTTP_400_BAD_REQUEST)
+    def update(self, request, *args, **kwargs):
+        energy_bill = self.get_object()
+        consumer_unit = energy_bill.consumer_unit
+        contract = energy_bill.contract
 
-        if EnergyBill.check_energy_bill_month_year(consumer_unit_id, date):
-            return Response(
-                "There is already an energy bill this month and year for this consumer unit.",
-                status=status.HTTP_400_BAD_REQUEST,
+        try:
+            RequestsPermissions.check_request_permissions(
+                request.user,
+                RequestsPermissions.default_users_permissions,
+                consumer_unit.university.id
+            )
+            RequestsPermissions.check_request_permissions(
+                request.user,
+                RequestsPermissions.default_users_permissions,
+                contract.consumer_unit.university.id
+            )
+        except Exception as error:
+            return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
+
+        return super().update(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        consumer_unit_id = request.data.get("consumer_unit")
+        contract_id = request.data.get("contract")
+
+        try:
+            # Verifica se a unidade consumidora e o contrato existem
+            try:
+                consumer_unit = ConsumerUnit.objects.get(id=consumer_unit_id)
+                contract = Contract.objects.get(id=contract_id)
+            except ObjectDoesNotExist:
+                return Response(
+                {"error": "Consumer unit or contract does not exist"},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-        self.delete_view_cache()
-        return super().create(request, *args, **kwargs)
+            # Verifica permissões
+            try:
+                RequestsPermissions.check_request_permissions(
+                    request.user,
+                    RequestsPermissions.default_users_permissions,
+                    consumer_unit.university.id
+                )
+                RequestsPermissions.check_request_permissions(
+                    request.user,
+                    RequestsPermissions.default_users_permissions,
+                    contract.consumer_unit.university.id
+                )
+            except Exception as error:
+                return Response({"detail": str(error)}, status=status.HTTP_403_FORBIDDEN)
+
+            # Tenta criar a fatura
+            response = super().create(request, *args, **kwargs)
+            return response
+
+        except Exception as error:
+            # Todas as outras exceções são tratadas como erros de validação
+            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        energy_bill = self.get_object()
+        consumer_unit = energy_bill.consumer_unit
+        contract = energy_bill.contract
+
+        try:
+            RequestsPermissions.check_request_permissions(
+                request.user,
+                RequestsPermissions.default_users_permissions,
+                consumer_unit.university.id
+            )
+            RequestsPermissions.check_request_permissions(
+                request.user,
+                RequestsPermissions.default_users_permissions,
+                contract.consumer_unit.university.id
+            )
+        except Exception as error:
+            return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
+
+        return super().destroy(request, *args, **kwargs)
 
     @swagger_auto_schema(
         responses={200: serializers.EnergyBillListSerializerForDocs(many=True)},

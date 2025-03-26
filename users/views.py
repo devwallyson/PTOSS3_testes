@@ -31,6 +31,37 @@ class CustomUserViewSet(ModelViewSet):
         except Exception as error:
             return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
 
+    def update(self, request, *args, **kwargs):
+        user_types_with_permission = {
+            *RequestsPermissions.super_user_permissions,
+            *RequestsPermissions.admin_permission,
+        }
+
+        if request.user.type not in user_types_with_permission:
+            return Response(
+                {"detail": "This User does not have permission."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        instance = self.get_object()
+        new_user_type = request.data.get("type")
+
+        if request.user.universityuser.university != instance.universityuser.university:
+            return Response(
+                {"detail": "Admins can only edit users from their own university."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if new_user_type in RequestsPermissions.super_user_permissions:
+            forbidden_user_types = ["university_user"] + list(RequestsPermissions.admin_permission)
+            if instance.type in forbidden_user_types:
+                return Response(
+                    {"detail": "Admins cannot promote to Super Users."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        return super().update(request, *args, **kwargs)
+
     @action(detail=False, methods=["post"], url_path="change-user-password")
     def change_user_password(self, request: Request, pk=None):
         user = request.user
