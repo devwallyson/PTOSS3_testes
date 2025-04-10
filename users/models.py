@@ -85,7 +85,6 @@ class CustomUser(AbstractUser):
         ("admin_reset", "admin_reset"),
         ("user_reset", "user_reset"),
     )
-
     username = None
 
     super_user_type = "super_user"
@@ -119,6 +118,14 @@ class CustomUser(AbstractUser):
     @property
     def have_reset_password_token_enable(self) -> bool:
         return UserToken.get_enable_user_token_by_user(user=self)
+
+    @property
+    def is_admin(self):
+        return self.type == "super_user"
+
+    @property
+    def is_manager(self):
+        return self.type == "university_admin"
 
     class Meta:
         verbose_name = _("User")

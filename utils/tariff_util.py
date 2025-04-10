@@ -10,9 +10,8 @@ class Tariff:
         off_peak_tusd_in_reais_per_kw=None,
         off_peak_tusd_in_reais_per_mwh=None,
         off_peak_te_in_reais_per_mwh=None,
-        na_tusd_in_reais_per_kw=None
+        na_tusd_in_reais_per_kw=None,
     ):
-
         self.peak_tusd_in_reais_per_kw = peak_tusd_in_reais_per_kw
         self.peak_tusd_in_reais_per_mwh = peak_tusd_in_reais_per_mwh
         self.peak_te_in_reais_per_mwh = peak_te_in_reais_per_mwh
@@ -20,6 +19,7 @@ class Tariff:
         self.off_peak_tusd_in_reais_per_mwh = off_peak_tusd_in_reais_per_mwh
         self.off_peak_te_in_reais_per_mwh = off_peak_te_in_reais_per_mwh
         self.na_tusd_in_reais_per_kw = na_tusd_in_reais_per_kw
+
 
 def response_tariffs_of_distributor(start_date, end_date, pending, blue_tariff, green_tariff):
     response_blue = None
@@ -52,8 +52,8 @@ def response_tariffs_of_distributor(start_date, end_date, pending, blue_tariff, 
         "green": response_green,
     }
 
-class TestResponseTariffsOfDistributor(unittest.TestCase):
 
+class TestResponseTariffsOfDistributor(unittest.TestCase):
     def test_no_tariffs(self):
         result = response_tariffs_of_distributor("2023-01-01", "2023-12-31", True, None, None)
         expected = {
@@ -127,6 +127,7 @@ class TestResponseTariffsOfDistributor(unittest.TestCase):
             },
         }
         self.assertEqual(result, expected)
+
 
 if __name__ == "__main__":
     unittest.main()

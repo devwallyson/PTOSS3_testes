@@ -24,7 +24,6 @@ class CustomUserSerializer(HyperlinkedModelSerializer):
         model = CustomUser
         fields = [
             "id",
-            "url",
             "first_name",
             "last_name",
             "university_name",
@@ -41,6 +40,7 @@ class CustomUserSerializer(HyperlinkedModelSerializer):
 class UniversityUserSerializer(HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
     university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all())
+    university_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = UniversityUser
@@ -54,8 +54,21 @@ class UniversityUserSerializer(HyperlinkedModelSerializer):
             "type",
             "created_on",
             "university",
+            "university_name",
         ]
         extra_kwargs = {"password": {"write_only": True, "required": False}}
+
+    def get_university_name(self, obj):
+        try:
+            university_user = UniversityUser.objects.get(pk=obj.pk)
+            return (
+                f"{university_user.university.acronym} - {university_user.university.name}"
+                if university_user.university
+                else None
+            )
+        except UniversityUser.DoesNotExist:
+            return None
+
 
 
 class RetrieveUniversityUserSerializer(HyperlinkedModelSerializer):

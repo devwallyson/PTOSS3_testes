@@ -45,9 +45,9 @@ class ContractSerializer(serializers.ModelSerializer):
         for field in ["tariff_flag", "subgroup"]:
             choices = dict(getattr(Contract, f"{field}_choices"))
             if (value := locals()[field]) and value not in choices:
-                raise serializers.ValidationError({
-                    field:f"Invalid value '{value}'. Allowed values are: {list(choices.keys())}"})
-
+                raise serializers.ValidationError(
+                    {field: f"Invalid value '{value}'. Allowed values are: {list(choices.keys())}"}
+                )
 
         return attrs
 
@@ -55,6 +55,7 @@ class ContractSerializer(serializers.ModelSerializer):
         if value > date.today():
             raise serializers.ValidationError("The start date cannot be in the future")
         return value
+
 
 class ContractListSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)

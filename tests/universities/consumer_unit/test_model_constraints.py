@@ -7,7 +7,6 @@ from tests.fixtures.distributor import distributor_a
 
 
 class TestConsumerUnitConstraints:
-
     endpoint = "/api/consumer-units/"
 
     def test_reject_duplicate_name_same_university(self, client, user_a, consumer_unit_a):
@@ -24,10 +23,7 @@ class TestConsumerUnitConstraints:
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "non_field_errors" in response.data
-        assert (
-            response.data["non_field_errors"][0]
-            == "The fields university, name must make a unique set."
-        )
+        assert response.data["non_field_errors"][0] == "The fields university, name must make a unique set."
 
     def test_reject_duplicate_code_same_university(self, client, user_a, consumer_unit_a):
         client.force_authenticate(user_a)
@@ -42,10 +38,7 @@ class TestConsumerUnitConstraints:
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "non_field_errors" in response.data
-        assert (
-            response.data["non_field_errors"][0]
-            == "The fields university, code must make a unique set."
-        )
+        assert response.data["non_field_errors"][0] == "The fields university, code must make a unique set."
 
     def test_allow_duplicate_name_different_universities(self, client, user_b, consumer_unit_a, university_b):
         client.force_authenticate(user_b)
@@ -79,8 +72,8 @@ class TestConsumerUnitConstraints:
         assert response.data["university"] == university_b.id
         assert response.data["name"] == "Consumer Unit B"
 
-class TestTariffFlagSubgroup:
 
+class TestTariffFlagSubgroup:
     endpoint = "/api/consumer-units/create_consumer_unit_and_contract/"
 
     def test_create_contract_tariff_flag_missing(self, client, user_a, distributor_a, university_a):
@@ -91,7 +84,7 @@ class TestTariffFlagSubgroup:
                 "code": "00540",
                 "is_active": True,
                 "university": university_a.id,
-                "totalInstalledPower": "null"
+                "totalInstalledPower": "null",
             },
             "contract_data": {
                 "start_date": "2023-01-01",
@@ -100,12 +93,12 @@ class TestTariffFlagSubgroup:
                 "distributor": distributor_a.id,
                 "peak_contracted_demand_in_kw": 33,
                 "off_peak_contracted_demand_in_kw": 33,
-            }
+            },
         }
         response = client.post(self.endpoint, create_consumer, format="json")
         print(response.content)  # Log temporário
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {'contract': ['This field is required.']}
+        assert json.loads(response.content) == {"contract": ["This field is required."]}
 
     def test_create_contract_invalid_tariff_flag(self, client, user_a, distributor_a, university_a):
         client.force_authenticate(user_a)
@@ -116,7 +109,7 @@ class TestTariffFlagSubgroup:
                 "code": "00540",
                 "is_active": True,
                 "university": university_a.id,
-                "totalInstalledPower": "null"
+                "totalInstalledPower": "null",
             },
             "contract_data": {
                 "start_date": "2023-01-01",
@@ -126,12 +119,12 @@ class TestTariffFlagSubgroup:
                 "distributor": distributor_a.id,
                 "peak_contracted_demand_in_kw": 33,
                 "off_peak_contracted_demand_in_kw": 33,
-            }
+            },
         }
         response = client.post(self.endpoint, create_consumer, format="json")
         print(response.content)  # Log temporário
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {'contract': ['This field is required.']}
+        assert json.loads(response.content) == {"contract": ["This field is required."]}
 
     def test_create_contract_subgroup_missing(self, client, user_a, distributor_a, university_a):
         client.force_authenticate(user_a)
@@ -141,7 +134,7 @@ class TestTariffFlagSubgroup:
                 "code": "00540",
                 "is_active": True,
                 "university": university_a.id,
-                "totalInstalledPower": "null"
+                "totalInstalledPower": "null",
             },
             "contract_data": {
                 "start_date": "2023-01-01",
@@ -150,12 +143,12 @@ class TestTariffFlagSubgroup:
                 "distributor": distributor_a.id,
                 "peak_contracted_demand_in_kw": 33,
                 "off_peak_contracted_demand_in_kw": 33,
-            }
+            },
         }
         response = client.post(self.endpoint, create_consumer, format="json")
         print(response.content)  # Log temporário
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {'contract': ['This field is required.']}
+        assert json.loads(response.content) == {"contract": ["This field is required."]}
 
     def test_create_contract_invalid_subgroup(self, client, user_a, distributor_a, university_a):
         client.force_authenticate(user_a)
@@ -165,7 +158,7 @@ class TestTariffFlagSubgroup:
                 "code": "00540",
                 "is_active": True,
                 "university": university_a.id,
-                "totalInstalledPower": "null"
+                "totalInstalledPower": "null",
             },
             "contract_data": {
                 "start_date": "2023-01-01",
@@ -175,9 +168,9 @@ class TestTariffFlagSubgroup:
                 "distributor": distributor_a.id,
                 "peak_contracted_demand_in_kw": 33,
                 "off_peak_contracted_demand_in_kw": 33,
-            }
+            },
         }
         response = client.post(self.endpoint, create_consumer, format="json")
         print(response.content)  # Log temporário
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {'contract': ['This field is required.']}
+        assert json.loads(response.content) == {"contract": ["This field is required."]}
