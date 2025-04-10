@@ -104,14 +104,18 @@ def create_test_green_tariff(dict: dict, distributor: Distributor) -> Tariff:
 # ---------------------------------------
 # Users
 
-
 def create_test_super_user(dict: dict) -> CustomUser:
     super_user = CustomUser.objects.create(
-        first_name=dict["first_name"], last_name=dict["last_name"], email=dict["email"], password=dict["password"]
+        first_name=dict["first_name"],
+        last_name=dict["last_name"],
+        email=dict["email"],
+        type=CustomUser.super_user_type,
+        is_staff=True,
     )
+    super_user.set_password(dict["password"])
+    super_user.save()
 
     return super_user
-
 
 def create_test_university_user(dict: dict, university: University) -> UniversityUser:
     university_user = UniversityUser.objects.create(

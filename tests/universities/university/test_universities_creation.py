@@ -18,8 +18,9 @@ class TestConsumerUnit:
         self.distributor_dict["id"] = self.distributor.id
 
         self.distributor_dict_2 = dicts_test_utils.distributor_dict_2
-        self.distributor_2 = create_objects_test_utils.create_test_distributor(self.distributor_dict_2,
-                                                                                self.university)
+        self.distributor_2 = create_objects_test_utils.create_test_distributor(
+            self.distributor_dict_2, self.university
+        )
         self.distributor_dict_2["id"] = self.distributor_2.id
 
         self.consumer_unit_dict = {
@@ -37,7 +38,6 @@ class TestConsumerUnit:
             "peak_contracted_demand_in_kw": 100,
             "off_peak_contracted_demand_in_kw": 80,
         }
-
 
     def test_create_consumer_unit(self):
         consumer_unit = ConsumerUnit.objects.create(
@@ -132,7 +132,6 @@ class TestConsumerUnit:
         assert updated_contract.peak_contracted_demand_in_kw == 120
         assert updated_contract.end_date == datetime.strptime("2024-12-31", "%Y-%m-%d").date()
 
-
     def test_is_current_energy_bill_filled(self):
         # Criando a unidade consumidora
         consumer_unit = ConsumerUnit.objects.create(
@@ -185,4 +184,3 @@ class TestConsumerUnit:
         pending_bills = consumer_unit.pending_energy_bills_number
         assert isinstance(pending_bills, int)
         assert pending_bills >= 0
-

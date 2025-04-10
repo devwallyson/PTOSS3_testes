@@ -50,7 +50,6 @@ class Contract(models.Model):
     def __str__(self):
         return f"{self.distributor.name} - {self.distributor.university.acronym} ({self.start_date})"
 
-
     def check_start_date_create_contract(self):
         if self.consumer_unit.current_contract:
             if self.start_date <= self.consumer_unit.current_contract.start_date:

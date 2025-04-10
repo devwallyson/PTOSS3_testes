@@ -1,4 +1,3 @@
-
 import logging
 import os
 
@@ -162,9 +161,7 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
 
         try:
             RequestsPermissions.check_request_permissions(
-                request.user,
-                RequestsPermissions.default_users_permissions,
-                consumer_unit.university.id
+                request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
             )
         except Exception as error:
             return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
@@ -179,14 +176,10 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
 
         try:
             RequestsPermissions.check_request_permissions(
-                request.user,
-                RequestsPermissions.default_users_permissions,
-                consumer_unit.university.id
+                request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
             )
             RequestsPermissions.check_request_permissions(
-                request.user,
-                RequestsPermissions.default_users_permissions,
-                contract.consumer_unit.university.id
+                request.user, RequestsPermissions.default_users_permissions, contract.consumer_unit.university.id
             )
         except Exception as error:
             return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
@@ -204,21 +197,16 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
                 contract = Contract.objects.get(id=contract_id)
             except ObjectDoesNotExist:
                 return Response(
-                {"error": "Consumer unit or contract does not exist"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                    {"error": "Consumer unit or contract does not exist"}, status=status.HTTP_400_BAD_REQUEST
+                )
 
             # Verifica permissões
             try:
                 RequestsPermissions.check_request_permissions(
-                    request.user,
-                    RequestsPermissions.default_users_permissions,
-                    consumer_unit.university.id
+                    request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
                 )
                 RequestsPermissions.check_request_permissions(
-                    request.user,
-                    RequestsPermissions.default_users_permissions,
-                    contract.consumer_unit.university.id
+                    request.user, RequestsPermissions.default_users_permissions, contract.consumer_unit.university.id
                 )
             except Exception as error:
                 return Response({"detail": str(error)}, status=status.HTTP_403_FORBIDDEN)
@@ -238,14 +226,10 @@ class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
 
         try:
             RequestsPermissions.check_request_permissions(
-                request.user,
-                RequestsPermissions.default_users_permissions,
-                consumer_unit.university.id
+                request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
             )
             RequestsPermissions.check_request_permissions(
-                request.user,
-                RequestsPermissions.default_users_permissions,
-                contract.consumer_unit.university.id
+                request.user, RequestsPermissions.default_users_permissions, contract.consumer_unit.university.id
             )
         except Exception as error:
             return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)

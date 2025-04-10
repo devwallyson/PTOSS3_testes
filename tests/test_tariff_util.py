@@ -6,10 +6,16 @@ from utils.tariff_util import response_tariffs_of_distributor
 
 
 class Tariff:
-    def __init__(self, peak_tusd_in_reais_per_kw, peak_tusd_in_reais_per_mwh,
-                 peak_te_in_reais_per_mwh, off_peak_tusd_in_reais_per_kw,
-                 off_peak_tusd_in_reais_per_mwh, off_peak_te_in_reais_per_mwh,
-                 na_tusd_in_reais_per_kw):
+    def __init__(
+        self,
+        peak_tusd_in_reais_per_kw,
+        peak_tusd_in_reais_per_mwh,
+        peak_te_in_reais_per_mwh,
+        off_peak_tusd_in_reais_per_kw,
+        off_peak_tusd_in_reais_per_mwh,
+        off_peak_te_in_reais_per_mwh,
+        na_tusd_in_reais_per_kw,
+    ):
         self.peak_tusd_in_reais_per_kw = peak_tusd_in_reais_per_kw
         self.peak_tusd_in_reais_per_mwh = peak_tusd_in_reais_per_mwh
         self.peak_te_in_reais_per_mwh = peak_te_in_reais_per_mwh
@@ -27,7 +33,7 @@ def test_response_with_blue_tariff_only():
         off_peak_tusd_in_reais_per_kw=0.7,
         off_peak_tusd_in_reais_per_mwh=2.1,
         off_peak_te_in_reais_per_mwh=4.3,
-        na_tusd_in_reais_per_kw=None
+        na_tusd_in_reais_per_kw=None,
     )
     green_tariff = None
     start_date = date(2024, 1, 1)
@@ -55,7 +61,7 @@ def test_response_with_green_tariff_only():
         off_peak_tusd_in_reais_per_kw=None,
         off_peak_tusd_in_reais_per_mwh=2.1,
         off_peak_te_in_reais_per_mwh=4.3,
-        na_tusd_in_reais_per_kw=0.7
+        na_tusd_in_reais_per_kw=0.7,
     )
     start_date = date(2024, 1, 1)
     end_date = date(2024, 12, 31)
@@ -80,7 +86,7 @@ def test_response_with_both_tariffs():
         off_peak_tusd_in_reais_per_kw=0.7,
         off_peak_tusd_in_reais_per_mwh=2.1,
         off_peak_te_in_reais_per_mwh=4.3,
-        na_tusd_in_reais_per_kw=None
+        na_tusd_in_reais_per_kw=None,
     )
     green_tariff = Tariff(
         peak_tusd_in_reais_per_kw=None,
@@ -89,7 +95,7 @@ def test_response_with_both_tariffs():
         off_peak_tusd_in_reais_per_kw=None,
         off_peak_tusd_in_reais_per_mwh=2.1,
         off_peak_te_in_reais_per_mwh=4.3,
-        na_tusd_in_reais_per_kw=0.7
+        na_tusd_in_reais_per_kw=0.7,
     )
     start_date = date(2024, 1, 1)
     end_date = date(2024, 12, 31)
@@ -117,5 +123,3 @@ def test_response_with_no_tariffs():
 
     assert result["blue"] is None
     assert result["green"] is None
-
-

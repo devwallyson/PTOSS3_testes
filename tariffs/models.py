@@ -23,10 +23,7 @@ class Distributor(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=["university", "cnpj"],
-                name="unique_distributor_university_cnpj"
-            )
+            models.UniqueConstraint(fields=["university", "cnpj"], name="unique_distributor_university_cnpj")
         ]
 
     def save(self, *args, **kwargs):
