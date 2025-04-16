@@ -64,6 +64,7 @@ class ContractListSerializer(serializers.HyperlinkedModelSerializer):
     consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
     distributor = serializers.PrimaryKeyRelatedField(queryset=Distributor.objects.all())
     distributor_name = serializers.CharField(source="get_distributor_name")
+    university_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Contract
@@ -73,6 +74,7 @@ class ContractListSerializer(serializers.HyperlinkedModelSerializer):
             "consumer_unit",
             "distributor",
             "distributor_name",
+             "university_name",
             "start_date",
             "end_date",
             "tariff_flag",
@@ -80,6 +82,8 @@ class ContractListSerializer(serializers.HyperlinkedModelSerializer):
             "peak_contracted_demand_in_kw",
             "off_peak_contracted_demand_in_kw",
         ]
+    def get_university_name(self, obj):
+        return obj.consumer_unit.university.name if obj.consumer_unit else None
 
 
 class EnergyBillSerializer(serializers.HyperlinkedModelSerializer):

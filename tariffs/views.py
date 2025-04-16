@@ -256,8 +256,19 @@ class TariffViewSet(CachedViewSetMixin, ViewSet):
         start_date = data["start_date"]
         end_date = data["end_date"]
 
-        tariffs.filter(flag=Tariff.BLUE).update(**data["blue"], start_date=start_date, end_date=end_date)
-        tariffs.filter(flag=Tariff.GREEN).update(**data["green"], start_date=start_date, end_date=end_date)
+        for tariff in tariffs.filter(flag=Tariff.BLUE):
+            for key, value in data["blue"].items():
+                setattr(tariff, key, value)
+            tariff.start_date = start_date
+            tariff.end_date = end_date
+            tariff.save()
+
+        for tariff in tariffs.filter(flag=Tariff.GREEN):
+            for key, value in data["green"].items():
+                setattr(tariff, key, value)
+            tariff.start_date = start_date
+            tariff.end_date = end_date
+            tariff.save()
 
         blue_tariff = Tariff.objects.filter(
             subgroup=data["subgroup"],

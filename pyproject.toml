@@ -19,6 +19,7 @@ exclude = [
     "staticfiles",
     "__pycache__",
     "*/migrations/*.py",
+    ".git",
 ]
 
 [tool.ruff.format]
