@@ -6,7 +6,7 @@ from tests.test_utils import create_objects_test_utils, dicts_test_utils
 from universities.models import University
 from users.models import CustomUser, UniversityUser
 
-ENDPOINT = "/api/users/"
+ENDPOINT = "/api/university-user/"
 TOKEN_ENDPOINT = "/api/token/"
 ENDPOINT_UNIVERSITY = "/api/universities/"
 

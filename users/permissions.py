@@ -11,7 +11,7 @@ class UniversityUserPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         user = request.user
-        if user.is_staff:
+        if user.is_staff or user.is_admin:
             return True
         university_user = UniversityUser.objects.get(id=user.id)
         if user.is_manager and university_user.university == obj.university:

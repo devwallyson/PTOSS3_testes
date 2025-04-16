@@ -79,34 +79,45 @@ class UserToken(models.Model):
 
 
 class CustomUser(AbstractUser):
-    password_status = (
-        ("OK", "OK"),
-        ("first_access", "first_access"),
-        ("admin_reset", "admin_reset"),
-        ("user_reset", "user_reset"),
-    )
-    username = None
+    class Type(models.TextChoices):
+        SUPER_USER = "super_user", _("super_user")
+        UNIVERSITY_ADMIN = "university_admin", _("university_admin")
+        UNIVERSITY_USER = "university_user", _("university_user")
+        UNIVERSITY_GUEST = "university_guest", _("university_guest")
 
-    super_user_type = "super_user"
-    university_admin_user_type = "university_admin"
-    university_user_type = "university_user"
+    class PasswordStatus(models.TextChoices):
+        OK = "OK", _("OK")
+        FIRST_ACCESS = "first_access", _("first_access")
+        ADMIN_RESET = "admin_reset", _("admin_reset")
+        USER_RESET = "user_reset", _("user_reset")
+
+    super_user_type = Type.SUPER_USER
+    university_admin_user_type = Type.UNIVERSITY_ADMIN
+    university_user_type = Type.UNIVERSITY_USER
 
     all_user_types = [super_user_type, university_admin_user_type, university_user_type]
-    university_user_types = [university_admin_user_type, university_user_type]
+    university_user_types = [super_user_type, university_admin_user_type, university_user_type]
 
-    user_types = (
-        (super_user_type, "super_user"),
-        (university_admin_user_type, "university_admin"),
-        (university_user_type, "university_user"),
-    )
+    user_types = Type.choices
+    password_status = PasswordStatus.choices
+
+    username = None
 
     first_name = models.CharField(max_length=25)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(_("Email"), unique=True, null=False)
-    type = models.CharField(max_length=25, null=False, blank=False, choices=user_types)
+
+    type = models.CharField(
+        max_length=25,
+        null=False,
+        blank=False,
+        choices=user_types,
+    )
+
     created_on = models.DateTimeField(auto_now_add=True)
+
     account_password_status = models.CharField(
-        default="OK",
+        default=PasswordStatus.OK,
         max_length=25,
         null=False,
         blank=False,
@@ -121,11 +132,15 @@ class CustomUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.type == "super_user"
+        return self.type == CustomUser.Type.SUPER_USER
 
     @property
     def is_manager(self):
-        return self.type == "university_admin"
+        return self.type == CustomUser.Type.UNIVERSITY_ADMIN
+
+    @property
+    def is_guest(self):
+        return self.type == CustomUser.Type.UNIVERSITY_GUEST
 
     class Meta:
         verbose_name = _("User")
@@ -180,8 +195,8 @@ class UniversityUser(CustomUser):
     favorite_consumer_units = models.ManyToManyField(ConsumerUnit, blank=True)
     university = models.ForeignKey(
         University,
-        blank=False,
-        null=False,
+        blank=True,
+        null=True,
         on_delete=models.PROTECT,
         verbose_name="Universidade",
         help_text=_("Um Usuário de Universidade deve estar ligado a uma Universidade"),

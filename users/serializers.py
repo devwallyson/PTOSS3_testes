@@ -1,43 +1,12 @@
 from rest_framework import serializers
-from rest_framework.serializers import HyperlinkedModelSerializer, ModelSerializer, Serializer
+from rest_framework.serializers import ModelSerializer, Serializer
 
 from universities.serializers import ConsumerUnitSerializer
 
-from .models import CustomUser, University, UniversityUser
+from .models import University, UniversityUser
 
 
-class CustomUserSerializer(HyperlinkedModelSerializer):
-    university_name = serializers.SerializerMethodField(read_only=True)
-
-    def get_university_name(self, obj):
-        try:
-            university_user = UniversityUser.objects.get(pk=obj.pk)
-            return (
-                f"{university_user.university.acronym} - {university_user.university.name}"
-                if university_user.university
-                else None
-            )
-        except UniversityUser.DoesNotExist:
-            return None
-
-    class Meta:
-        model = CustomUser
-        fields = [
-            "id",
-            "first_name",
-            "last_name",
-            "university_name",
-            "password",
-            "email",
-            "type",
-            "account_password_status",
-            "have_reset_password_token_enable",
-            "created_on",
-        ]
-        extra_kwargs = {"password": {"write_only": True, "required": False}}
-
-
-class UniversityUserSerializer(HyperlinkedModelSerializer):
+class UniversityUserSerializer(ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all())
     university_name = serializers.SerializerMethodField(read_only=True)
@@ -46,7 +15,6 @@ class UniversityUserSerializer(HyperlinkedModelSerializer):
         model = UniversityUser
         fields = [
             "id",
-            "url",
             "first_name",
             "last_name",
             "password",
@@ -55,6 +23,8 @@ class UniversityUserSerializer(HyperlinkedModelSerializer):
             "created_on",
             "university",
             "university_name",
+            "account_password_status",
+            "have_reset_password_token_enable",
         ]
         extra_kwargs = {"password": {"write_only": True, "required": False}}
 
@@ -70,8 +40,7 @@ class UniversityUserSerializer(HyperlinkedModelSerializer):
             return None
 
 
-
-class RetrieveUniversityUserSerializer(HyperlinkedModelSerializer):
+class RetrieveUniversityUserSerializer(ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all())
     type = serializers.CharField(read_only=True)
@@ -81,7 +50,6 @@ class RetrieveUniversityUserSerializer(HyperlinkedModelSerializer):
         model = UniversityUser
         fields = [
             "id",
-            "url",
             "first_name",
             "last_name",
             "password",

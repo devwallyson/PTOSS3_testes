@@ -13,7 +13,7 @@ from users.models import UniversityUser
 
 TOKEN_ENDPOINT = "/api/token/"
 ENDPOINT_UNIVERSITY = "/api/universities/"
-ENDPOINT = "/api/users/"
+ENDPOINT = "/api/university-user/"
 ENDPOINT_USER_UNIVERSITY = "/api/university-user/"
 
 
