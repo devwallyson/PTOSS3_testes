@@ -122,14 +122,6 @@ def test_user_type_not_in_university_user_types():
         UserType.is_valid_user_type(invalid_user_type, user_model)
 
 
-def test_user_type_not_super_user_type():
-    # CT5 (MC/DC)
-    user_type = models.CustomUser.university_user_types[0]
-    user_model = models.CustomUser
-    with pytest.raises(Exception, match=r"Wrong User type \(\w+\) for this Model User"):
-        UserType.is_valid_user_type(user_type, user_model)
-
-
 def test_user_type_is_super_user_type():
     # CT6 (MC/DC)
     user_type = models.CustomUser.super_user_type

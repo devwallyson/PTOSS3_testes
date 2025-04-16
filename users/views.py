@@ -8,98 +8,13 @@ from rest_framework.viewsets import ModelViewSet
 
 from universities.models import ConsumerUnit
 
-from .models import CustomUser, UniversityUser
+from .models import UniversityUser
 from .permissions import UniversityUserPermission
-from .requests_permissions import RequestsPermissions
 from .serializers import (
-    ChangeUniversityUserTypeSerializer,
-    CustomUserSerializer,
     FavoriteConsumerUnitActionSerializer,
-    ListUsersParamsSerializer,
     RetrieveUniversityUserSerializer,
     UniversityUserSerializer,
 )
-
-
-class CustomUserViewSet(ModelViewSet):
-    queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
-
-    def create(self, request, *args, **kwargs):
-        user_types_with_permission = RequestsPermissions.super_user_permissions
-
-        try:
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, None)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
-    def update(self, request, *args, **kwargs):
-        user_types_with_permission = {
-            *RequestsPermissions.super_user_permissions,
-            *RequestsPermissions.admin_permission,
-        }
-
-        if request.user.type not in user_types_with_permission:
-            return Response({"detail": "This User does not have permission."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        instance = self.get_object()
-        new_user_type = request.data.get("type")
-
-        if request.user.universityuser.university != instance.universityuser.university:
-            return Response(
-                {"detail": "Admins can only edit users from their own university."}, status=status.HTTP_403_FORBIDDEN
-            )
-
-        if new_user_type in RequestsPermissions.super_user_permissions:
-            forbidden_user_types = ["university_user"] + list(RequestsPermissions.admin_permission)
-            if instance.type in forbidden_user_types:
-                return Response({"detail": "Admins cannot promote to Super Users."}, status=status.HTTP_403_FORBIDDEN)
-
-        return super().update(request, *args, **kwargs)
-
-    @action(detail=False, methods=["post"], url_path="change-user-password")
-    def change_user_password(self, request: Request, pk=None):
-        user = request.user
-        data = request.data
-
-        current_password = data.get("current_password")
-        new_password = data.get("new_password")
-
-        if not current_password or not new_password:
-            return Response({"error": "Todos os campos são obrigatórios"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = CustomUser.objects.get(id=user.id)
-            user.change_user_password(current_password, new_password)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as error:
-            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response({"detail": "Senha alterada com sucesso"}, status=status.HTTP_200_OK)
-
-    @swagger_auto_schema(query_serializer=ListUsersParamsSerializer)
-    def list(self, request):
-        user_types_with_permission = RequestsPermissions.admin_permission
-
-        try:
-            request_university_id = (
-                request.GET.get("university_id") if request.user.type != CustomUser.super_user_type else None
-            )
-
-            RequestsPermissions.check_request_permissions(
-                request.user, user_types_with_permission, request_university_id
-            )
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
-        if request.user.type == CustomUser.super_user_type:
-            queryset = CustomUser.objects.all()
-        else:
-            queryset = UniversityUser.objects.filter(university=request_university_id)
-
-        serializer = CustomUserSerializer(queryset, many=True, context={"request": request})
-        return Response(serializer.data, status.HTTP_200_OK)
 
 
 class UniversityUsersViewSet(ModelViewSet):
@@ -109,18 +24,12 @@ class UniversityUsersViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
+        if user.is_staff or user.is_admin:
             return UniversityUser.objects.all()
         university_user = UniversityUser.objects.get(id=user.id)
         if user.is_manager:
             return UniversityUser.objects.filter(university=university_user.university)
         return UniversityUser.objects.filter(id=user.id)
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -139,11 +48,6 @@ class UniversityUsersViewSet(ModelViewSet):
 
         serializer.save(university_id=university_id)
 
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
     def perform_destroy(self, serializer):
         user = self.request.user
         if user.is_staff:
@@ -151,17 +55,9 @@ class UniversityUsersViewSet(ModelViewSet):
         else:
             raise PermissionDenied("Only super_admin can delete an account.")
 
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def perform_update(self, serializer):
         user = self.request.user
-        if user.is_staff:
+        if user.is_staff or user.is_admin:
             serializer.save()
             return
         university_user = UniversityUser.objects.get(id=user.id)
@@ -199,36 +95,23 @@ class UniversityUsersViewSet(ModelViewSet):
 
         return Response(data, status.HTTP_200_OK)
 
-    @swagger_auto_schema(request_body=ChangeUniversityUserTypeSerializer)
-    @action(detail=False, methods=["post"], url_path="change-university-user-type")
-    def change_university_user_type(self, request: Request, pk=None):
-        user_types_with_permission = RequestsPermissions.admin_permission
-        params_serializer = ChangeUniversityUserTypeSerializer(data=request.data)
-
-        if not params_serializer.is_valid():
-            return Response(params_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    @action(detail=False, methods=["post"], url_path="change-user-password")
+    def change_user_password(self, request: Request, pk=None):
+        user = request.user
         data = request.data
-        user_id = data["user_id"]
-        new_user_type = data["new_user_type"]
+
+        current_password = data.get("current_password")
+        new_password = data.get("new_password")
+
+        if not current_password or not new_password:
+            return Response({"error": "Todos os campos são obrigatórios"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            request_university_id = (
-                UniversityUser.objects.get(id=request.user.id).university.id
-                if request.user.type in CustomUser.university_user_types
-                else None
-            )
-
-            RequestsPermissions.check_request_permissions(
-                request.user, user_types_with_permission, request_university_id
-            )
+            user = UniversityUser.objects.get(id=user.id)
+            user.change_user_password(current_password, new_password)
+        except UniversityUser.DoesNotExist:
+            return Response({"error": "Usuário não encontrado"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            user_for_change = UniversityUser.objects.get(id=user_id)
-            user_for_change.change_university_user_type(new_user_type)
-        except Exception as error:
-            return Response({"error": f"{error}"}, status.HTTP_400_BAD_REQUEST)
-
-        return Response(data)
+        return Response({"detail": "Senha alterada com sucesso"}, status=status.HTTP_200_OK)

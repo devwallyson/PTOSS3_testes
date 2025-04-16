@@ -9,7 +9,6 @@ from contracts.models import Contract
 from universities.models import University, ConsumerUnit
 from tariffs.models import Distributor, Tariff
 from contracts.models import Contract, EnergyBill
-from users.models import UniversityUser
 
 TODAY = date.today()
 YEAR_LATER = TODAY + timedelta(days=2*365)
@@ -37,14 +36,14 @@ def data_size(list):
 def update_data(list, size):
     current_date = datetime.now().date()
     n_months = size - 1
-    
+
     for i in range(size):
         new_date = current_date - relativedelta(months=n_months - i)
         list[i][0] = new_date.strftime('%Y-%m-%d')
-    
+
     return list
 
-########################################################################## 
+##########################################################################
 
 # Universidade
 
