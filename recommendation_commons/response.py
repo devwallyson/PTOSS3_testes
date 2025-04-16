@@ -37,7 +37,7 @@ def _generate_tariffs_as_table(blue_tariff: Tariff, green_tariff: Tariff):
 
     tariffs_table: list[dict] = []
     for label in tariff_labels:
-        row = {"label": label, "billing_time": _get_tariff_billing_time(label)}
+        row = {"label": label, "billingTime": _get_tariff_billing_time(label)}
         row["blue"] = serialized_blue[label] if label in serialized_blue else None
         row["green"] = serialized_green[label] if label in serialized_green else None
         tariffs_table.append(row)
@@ -73,9 +73,9 @@ def _generate_plot_costs_comparison(recommendation: RecommendationResult):
 
 def _generate_plot_detailed_contracts_costs_comparison(recommendation: RecommendationResult):
     result = DataFrame()
-    result.insert(0, "consumption_cost_in_reais_in_recommended", recommendation.frame.consumption_cost_in_reais)
-    result.insert(0, "demand_cost_in_reais_in_recommended", recommendation.frame.demand_cost_in_reais)
-    result.insert(0, "total_cost_in_reais_in_current", recommendation.current_contract.cost_in_reais)
+    result.insert(0, "consumptionCostInReaisInRecommended", recommendation.frame.consumption_cost_in_reais)
+    result.insert(0, "demandCostInReaisInRecommended", recommendation.frame.demand_cost_in_reais)
+    result.insert(0, "totalCostInReaisInCurrent", recommendation.current_contract.cost_in_reais)
     return result.to_dict("list")
 
 
@@ -203,3 +203,4 @@ def build_response(
             "current_total_cost": current_total_cost,
         }
     )
+
