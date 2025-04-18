@@ -20,7 +20,7 @@ class ContractUtils:
                 locale="pt_br",
             )
         except Exception:
-            logger.error("Invalid date received: ", energy_bill_date)
+            logger.error(f"Invalid date received: {energy_bill_date}")
             return energy_bill_date
 
         return date_obj.date()

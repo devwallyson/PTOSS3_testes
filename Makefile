@@ -9,6 +9,7 @@ ENV_DEV=.envs/.env.dev
 ENV_TEST=.envs/.env.test
 ENV_PROD=.envs/.env.prod
 COMPOSE_FILE_DEV=compose.yml
+COMPOSE_FILE_CI=compose-ci.yml
 COMPOSE_FILE_TEST=compose-test.yml
 COMPOSE_FILE_PROD=compose-prod.yml
 
@@ -115,6 +116,13 @@ up-prod:
 down-prod:
 	docker compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_PROD) down
 	@$(call clean-dangling)
+
+# --------------------------------------------------------------------------------------------------------------------
+
+test:
+	@echo ""${Y}"🧪"${E}" Running tests in isolated Docker container..."
+	@docker compose -f $(COMPOSE_FILE_CI) run --rm mepa-api-ci pytest -v --disable-warnings --tb=short
+	@echo "\n"${G}"󰘽"${E}" Test suite execution completed successfully!\n"
 
 # --------------------------------------------------------------------------------------------------------------------
 
