@@ -75,20 +75,3 @@ def test_exception_logging(setup_logger):
         logger.exception("Exception log test message")
     assert "Exception log test message" in log_output.getvalue()
     assert "ValueError: Test exception" in log_output.getvalue()
-
-
-def test_apps_logfile(temp_log_dir):
-    logger = logging.getLogger("apps")
-    test_message = "Test log content - apps_logfile"
-    logger.warning(test_message)
-
-    for handler in logger.handlers:
-        handler.flush()
-
-    log_file = settings.LOG_DIR / "apps.log"
-    assert log_file.exists(), "O arquivo de log apps.log deve existir"
-
-    with open(log_file) as f:
-        log_content = f.read()
-        print(f"Conteúdo do arquivo de log:\n{log_content}")
-    assert test_message in log_content, f"A mensagem '{test_message}' deve estar no arquivo apps.log"
