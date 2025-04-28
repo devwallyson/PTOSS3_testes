@@ -39,9 +39,12 @@ class UniversityUsersViewSet(ModelViewSet):
 
         university_id = UniversityUser.objects.filter(id=user.id).values_list("university", flat=True).first()
         user_type = serializer.validated_data.get("type")
-        allowed_types = ["university_admin", "university_user"]
-
-        if not user.is_manager:
+        allowed_types = [
+            UniversityUser.Type.UNIVERSITY_ADMIN,
+            UniversityUser.Type.UNIVERSITY_USER,
+            UniversityUser.Type.UNIVERSITY_GUEST,
+        ]
+        if user.is_operational or user.is_guest:
             raise PermissionDenied("Common users cannot create accounts.")
         elif user_type not in allowed_types:
             raise PermissionDenied("Managers can only create 'university_admin' or 'university_user' accounts.")

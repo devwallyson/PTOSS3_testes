@@ -19,13 +19,13 @@ from rest_framework.viewsets import ModelViewSet
 from contracts.models import Contract, EnergyBill
 from universities.models import ConsumerUnit
 from users.requests_permissions import RequestsPermissions
-from utils.mixins.cache_mixin import CachedViewSetMixin
+from utils.mixins.cache_mixin import CacheModelMixin
 from utils.subgroup_util import Subgroup
 
 from . import serializers, services
 
 
-class ContractViewSet(CachedViewSetMixin, ModelViewSet):
+class ContractViewSet(CacheModelMixin, ModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     cache_key_prefix = "contract_viewset"
@@ -149,7 +149,7 @@ class ContractViewSet(CachedViewSetMixin, ModelViewSet):
         return Response(serializer.data, status.HTTP_200_OK)
 
 
-class EnergyBillViewSet(CachedViewSetMixin, ModelViewSet):
+class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
     queryset = EnergyBill.objects.all()
     serializer_class = serializers.EnergyBillSerializer
     cache_key_prefix = "energybill_viewset"

@@ -121,7 +121,7 @@ down-prod:
 
 test:
 	@echo ""${Y}"🧪"${E}" Running tests in isolated Docker container..."
-	@docker compose -f $(COMPOSE_FILE_CI) run --rm mepa-api-ci pytest -v --disable-warnings --tb=short
+	@docker compose -f $(COMPOSE_FILE_CI) run --rm mepa-api-ci pytest -vs --disable-warnings --tb=short
 	@echo "\n"${G}"󰘽"${E}" Test suite execution completed successfully!\n"
 
 # --------------------------------------------------------------------------------------------------------------------

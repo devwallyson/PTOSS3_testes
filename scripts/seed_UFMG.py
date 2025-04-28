@@ -37,14 +37,14 @@ def data_size(list):
 def update_data(list, size):
     current_date = datetime.now().date()
     n_months = size - 1
-    
+
     for i in range(size):
         new_date = current_date - relativedelta(months=n_months - i)
         list[i][0] = new_date.strftime('%Y-%m-%d')
-    
+
     return list
 
-########################################################################## 
+##########################################################################
 
 # Universidade
 
@@ -58,7 +58,7 @@ university = University.objects.create(
 
 admin_university_user = UniversityUser.objects.create(
     university=university,
-    type=UniversityUser.university_admin_user_type,
+    type=UniversityUser.Type.UNIVERSITY_ADMIN,
     password='ufmg',
     email='admin@ufmg.br',
     first_name="João",
@@ -68,6 +68,7 @@ admin_university_user = UniversityUser.objects.create(
 
 university_user = UniversityUser.objects.create(
     university=university,
+    type=UniversityUser.Type.UNIVERSITY_USER,
     password='ufmg',
     email='usuario@ufmg.br',
     first_name="José",
@@ -500,7 +501,7 @@ table_uc_pampulha_praca = [['2023-10-01', 1194.00, 13057.00, 62.16, 132.38, 1103
 size_pampulha_praca = data_size(table_uc_pampulha_praca)
 table_uc_pampulha_praca = update_data(table_uc_pampulha_praca, size_pampulha_praca)
 create_bills_from_table(contract_pampulha_praca, uc_pampulha_praca, table_uc_pampulha_praca)
- 
+
 table_uc_diamantina = [['2023-08-01', 949.00,  7313.00, 36.54, 75.60, 8911.80, False],
                        ['2023-09-01', 1379.00, 6980.00, 52.92, 85.18, 9518.99, False],
                        ['2023-10-01', 3226.00, 12966.00, 116.93, 116.42, 15152.39, False],
@@ -523,11 +524,11 @@ table_uc_diamantina = [['2023-08-01', 949.00,  7313.00, 36.54, 75.60, 8911.80, F
 size_diamantina = data_size(table_uc_diamantina)
 table_uc_diamantina = update_data(table_uc_diamantina, size_diamantina)
 create_bills_from_table(contract_diamantina, uc_diamantina, table_uc_diamantina)
- 
+
 table_uc_pampulha_teatro = [['2023-10-01', 4550, 56000, 112, 207, 8550.40],
                             ['2023-11-01', 3500, 51100, 112, 207, 8814.11],
                             ['2023-12-01', 4550, 51450, 112, 207, 8482.50]]
- 
+
 size_pampulha_teatro = data_size(table_uc_pampulha_teatro)
 table_uc_pampulha_teatro = update_data(table_uc_pampulha_teatro, size_pampulha_teatro)
 create_bills_from_table(contract_pampulha_teatro, uc_pampulha_teatro, table_uc_pampulha_teatro)

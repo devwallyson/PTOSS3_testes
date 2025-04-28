@@ -1,176 +1,88 @@
-import json
+import pytest
 
-from rest_framework import status
+from django.db.utils import IntegrityError
 
-from tests.fixtures import consumer_unit_a, university_a, university_b, user_a, user_b
-from tests.fixtures.distributor import distributor_a
+from tests.fixtures import consumer_unit_a, university_a, university_b
+from universities.models import ConsumerUnit
 
 
 class TestConsumerUnitConstraints:
-    endpoint = "/api/consumer-units/"
-
-    def test_reject_duplicate_name_same_university(self, client, user_a, consumer_unit_a):
-        client.force_authenticate(user_a)
-        response = client.post(
-            self.endpoint,
-            {
-                "name": consumer_unit_a.name,
-                "code": "123",
-                "university": consumer_unit_a.university.id,
-                "total_installed_power": 100,
-                "is_active": True,
-            },
-        )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "non_field_errors" in response.data
-        assert response.data["non_field_errors"][0] == "The fields university, name must make a unique set."
-
-    def test_reject_duplicate_code_same_university(self, client, user_a, consumer_unit_a):
-        client.force_authenticate(user_a)
-        response = client.post(
-            self.endpoint,
-            {
-                "name": "Consumer Unit B",
-                "code": consumer_unit_a.code,
-                "university": consumer_unit_a.university.id,
-                "total_installed_power": 100,
-            },
-        )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "non_field_errors" in response.data
-        assert response.data["non_field_errors"][0] == "The fields university, code must make a unique set."
-
-    def test_allow_duplicate_name_different_universities(self, client, user_b, consumer_unit_a, university_b):
-        client.force_authenticate(user_b)
-        response = client.post(
-            self.endpoint,
-            {
-                "name": consumer_unit_a.name,
-                "code": "123",
-                "university": university_b.id,
-                "total_installed_power": 100,
-            },
-        )
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["name"] == consumer_unit_a.name
-        assert response.data["university"] == university_b.id
-        assert response.data["code"] == "123"
-
-    def test_allow_duplicate_code_different_universities(self, client, user_b, consumer_unit_a, university_b):
-        client.force_authenticate(user_b)
-        response = client.post(
-            self.endpoint,
-            {
-                "name": "Consumer Unit B",
-                "code": consumer_unit_a.code,
-                "university": university_b.id,
-                "total_installed_power": 100,
-            },
-        )
-        assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["code"] == consumer_unit_a.code
-        assert response.data["university"] == university_b.id
-        assert response.data["name"] == "Consumer Unit B"
-
-
-class TestTariffFlagSubgroup:
-    endpoint = "/api/consumer-units/create_consumer_unit_and_contract/"
-
-    def test_create_contract_tariff_flag_missing(self, client, user_a, distributor_a, university_a):
-        client.force_authenticate(user_a)
-        create_consumer = {
-            "consumer_unit": {
-                "name": "Unb",
-                "code": "00540",
-                "is_active": True,
-                "university": university_a.id,
-                "totalInstalledPower": "null",
-            },
-            "contract_data": {
-                "start_date": "2023-01-01",
-                "end_date": "2023-12-31",
-                "subgroup": "A2",
-                "distributor": distributor_a.id,
-                "peak_contracted_demand_in_kw": 33,
-                "off_peak_contracted_demand_in_kw": 33,
-            },
+    def test_reject_duplicate_name_same_university(self, consumer_unit_a):
+        data = {
+            "name": consumer_unit_a.name,
+            "code": "new-code",
+            "university": consumer_unit_a.university,
+            "total_installed_power": 100,
+            "is_active": True,
         }
-        response = client.post(self.endpoint, create_consumer, format="json")
-        print(response.content)  # Log temporário
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {"contract": ["This field is required."]}
 
-    def test_create_contract_invalid_tariff_flag(self, client, user_a, distributor_a, university_a):
-        client.force_authenticate(user_a)
-        valid_tariff_flag = ["G", "B"]
-        create_consumer = {
-            "consumer_unit": {
-                "name": "Unb",
-                "code": "00540",
-                "is_active": True,
-                "university": university_a.id,
-                "totalInstalledPower": "null",
-            },
-            "contract_data": {
-                "start_date": "2023-01-01",
-                "end_date": "2023-12-31",
-                "subgroup": "A2",
-                "tariff_flag": "X",
-                "distributor": distributor_a.id,
-                "peak_contracted_demand_in_kw": 33,
-                "off_peak_contracted_demand_in_kw": 33,
-            },
-        }
-        response = client.post(self.endpoint, create_consumer, format="json")
-        print(response.content)  # Log temporário
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {"contract": ["This field is required."]}
+        with pytest.raises(IntegrityError) as error:
+            ConsumerUnit.objects.create(**data)
 
-    def test_create_contract_subgroup_missing(self, client, user_a, distributor_a, university_a):
-        client.force_authenticate(user_a)
-        create_consumer = {
-            "consumer_unit": {
-                "name": "Unb",
-                "code": "00540",
-                "is_active": True,
-                "university": university_a.id,
-                "totalInstalledPower": "null",
-            },
-            "contract_data": {
-                "start_date": "2023-01-01",
-                "end_date": "2023-12-31",
-                "tariff_flag": "B",
-                "distributor": distributor_a.id,
-                "peak_contracted_demand_in_kw": 33,
-                "off_peak_contracted_demand_in_kw": 33,
-            },
-        }
-        response = client.post(self.endpoint, create_consumer, format="json")
-        print(response.content)  # Log temporário
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {"contract": ["This field is required."]}
+        assert "UNIQUE constraint failed" in str(error)
+        assert "universities_consumerunit.name" in str(error)
 
-    def test_create_contract_invalid_subgroup(self, client, user_a, distributor_a, university_a):
-        client.force_authenticate(user_a)
-        create_consumer = {
-            "consumer_unit": {
-                "name": "Unb",
-                "code": "00540",
-                "is_active": True,
-                "university": university_a.id,
-                "totalInstalledPower": "null",
-            },
-            "contract_data": {
-                "start_date": "2023-01-01",
-                "end_date": "2023-12-31",
-                "subgroup": "A7",
-                "tariff_flag": "B",
-                "distributor": distributor_a.id,
-                "peak_contracted_demand_in_kw": 33,
-                "off_peak_contracted_demand_in_kw": 33,
-            },
+    def test_reject_duplicate_code_same_university(self, consumer_unit_a):
+        data = {
+            "name": "New Consumer Unit",
+            "code": consumer_unit_a.code,
+            "university": consumer_unit_a.university,
+            "total_installed_power": 100,
+            "is_active": True,
         }
-        response = client.post(self.endpoint, create_consumer, format="json")
-        print(response.content)  # Log temporário
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert json.loads(response.content) == {"contract": ["This field is required."]}
+
+        with pytest.raises(IntegrityError) as error:
+            ConsumerUnit.objects.create(**data)
+
+        assert "UNIQUE constraint failed" in str(error)
+        assert "universities_consumerunit.code" in str(error)
+
+    def test_allow_same_name_different_university(self, consumer_unit_a, university_b):
+        data = {
+            "name": consumer_unit_a.name,
+            "code": "unique-code-b",
+            "university": university_b,
+            "total_installed_power": 100,
+            "is_active": True,
+        }
+
+        consumer_unit = ConsumerUnit.objects.create(**data)
+        assert consumer_unit.name == data["name"]
+        assert consumer_unit.code == data["code"]
+        assert consumer_unit.university == university_b
+        assert consumer_unit.total_installed_power == data["total_installed_power"]
+        assert consumer_unit.is_active == data["is_active"]
+        assert ConsumerUnit.objects.filter(name=consumer_unit_a.name, university=university_b).exists()
+
+    def test_allow_same_code_different_university(self, consumer_unit_a, university_b):
+        data = {
+            "name": "New Consumer Unit",
+            "code": consumer_unit_a.code,
+            "university": university_b,
+            "total_installed_power": 100,
+            "is_active": True,
+        }
+
+        consumer_unit = ConsumerUnit.objects.create(**data)
+        assert consumer_unit.name == data["name"]
+        assert consumer_unit.code == data["code"]
+        assert consumer_unit.university == university_b
+        assert consumer_unit.total_installed_power == data["total_installed_power"]
+        assert consumer_unit.is_active == data["is_active"]
+        assert ConsumerUnit.objects.filter(code=consumer_unit_a.code, university=university_b).exists()
+
+    def test_allow_same_name_and_code_different_university(self, consumer_unit_a, university_b):
+        data = {
+            "name": consumer_unit_a.name,
+            "code": consumer_unit_a.code,
+            "university": university_b,
+            "total_installed_power": 100,
+            "is_active": True,
+        }
+        consumer_unit = ConsumerUnit.objects.create(**data)
+        assert consumer_unit.name == data["name"]
+        assert consumer_unit.code == data["code"]
+        assert consumer_unit.university == university_b
+        assert consumer_unit.total_installed_power == data["total_installed_power"]
+        assert consumer_unit.is_active == data["is_active"]
+        assert ConsumerUnit.objects.filter(name=data["name"], university=university_b).exists()

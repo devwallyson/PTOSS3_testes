@@ -117,7 +117,7 @@ contract_dict_9_wrong_subgroup = {
 contract_dict_10 = {
     "end_date": date(year=2050, month=2, day=1),
     "start_date": date(year=2050, month=2, day=1),
-    "" "tariff_flag": "V",
+    "tariff_flag": "V",
     "subgroup": "A2",
     "peak_contracted_demand_in_kw": 100.00,
     "off_peak_contracted_demand_in_kw": 100.00,

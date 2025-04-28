@@ -9,7 +9,7 @@ invalid_date_format_dict = {
                 "errors": [
                     [
                         8,
-                        'O mês deve ser uma data nos formatos "mm/aaaa", ' '"mmm/aaaa" como "abr/2024"',
+                        'O mês deve ser uma data nos formatos "mm/aaaa", "mmm/aaaa" como "abr/2024"',
                     ]
                 ],
                 "value": "04-2024",
@@ -210,7 +210,7 @@ invalid_number_dict_xlsx = {
                 "errors": [
                     [
                         9,
-                        "Valores de Consumo e Demanda devem ser números entre " "0,1 e 9.999.999,99",
+                        "Valores de Consumo e Demanda devem ser números entre 0,1 e 9.999.999,99",
                     ],
                 ],
                 "value": "abd",
@@ -237,7 +237,7 @@ invalid_number_dict_xlsx = {
                 "errors": [
                     [
                         8,
-                        'O mês deve ser uma data nos formatos "mm/aaaa", ' '"mmm/aaaa" como "abr/2024"',
+                        'O mês deve ser uma data nos formatos "mm/aaaa", "mmm/aaaa" como "abr/2024"',
                     ],
                 ],
                 "value": "05-2024",
@@ -258,7 +258,7 @@ invalid_number_dict_xlsx = {
                 "errors": [
                     [
                         9,
-                        "Valores de Consumo e Demanda devem ser números entre " "0,1 e 9.999.999,99",
+                        "Valores de Consumo e Demanda devem ser números entre 0,1 e 9.999.999,99",
                     ],
                 ],
                 "value": 10000000000,
@@ -293,7 +293,7 @@ invalid_number_dict_xlsx = {
                 "errors": [
                     [
                         9,
-                        "Valores de Consumo e Demanda devem ser números entre " "0,1 e 9.999.999,99",
+                        "Valores de Consumo e Demanda devem ser números entre 0,1 e 9.999.999,99",
                     ],
                 ],
                 "value": "pedro",
@@ -325,7 +325,7 @@ invalid_number_dict_csv = {
                 "errors": [
                     [
                         9,
-                        "Valores de Consumo e Demanda devem ser números entre " "0,1 e 9.999.999,99",
+                        "Valores de Consumo e Demanda devem ser números entre 0,1 e 9.999.999,99",
                     ],
                 ],
                 "value": "abd",
@@ -352,7 +352,7 @@ invalid_number_dict_csv = {
                 "errors": [
                     [
                         8,
-                        'O mês deve ser uma data nos formatos "mm/aaaa", ' '"mmm/aaaa" como "abr/2024"',
+                        'O mês deve ser uma data nos formatos "mm/aaaa", "mmm/aaaa" como "abr/2024"',
                     ],
                 ],
                 "value": "05-2024",
@@ -373,7 +373,7 @@ invalid_number_dict_csv = {
                 "errors": [
                     [
                         9,
-                        "Valores de Consumo e Demanda devem ser números entre " "0,1 e 9.999.999,99",
+                        "Valores de Consumo e Demanda devem ser números entre 0,1 e 9.999.999,99",
                     ],
                 ],
                 "value": "10000000000",
@@ -408,7 +408,7 @@ invalid_number_dict_csv = {
                 "errors": [
                     [
                         9,
-                        "Valores de Consumo e Demanda devem ser números entre " "0,1 e 9.999.999,99",
+                        "Valores de Consumo e Demanda devem ser números entre 0,1 e 9.999.999,99",
                     ],
                 ],
                 "value": "pedro",

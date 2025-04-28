@@ -110,7 +110,7 @@ def create_test_super_user(dict: dict) -> CustomUser:
         first_name=dict["first_name"],
         last_name=dict["last_name"],
         email=dict["email"],
-        type=CustomUser.super_user_type,
+        type=CustomUser.Type.SUPER_USER,
         is_staff=True,
     )
     super_user.set_password(dict["password"])
@@ -125,6 +125,7 @@ def create_test_university_user(dict: dict, university: University) -> Universit
         last_name=dict["last_name"],
         email=dict["email"],
         password=dict["password"],
+        type=CustomUser.Type.UNIVERSITY_USER,
         university=university,
     )
 
@@ -138,7 +139,7 @@ def create_test_university_admin_user(dict: dict, university: University) -> Uni
         email=dict["email"],
         password=dict["password"],
         university=university,
-        type=CustomUser.university_admin_user_type,
+        type=CustomUser.Type.UNIVERSITY_ADMIN,
     )
 
     return university_admin_user

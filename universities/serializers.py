@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.db import transaction
 from rest_framework import serializers
 
@@ -9,11 +7,10 @@ from universities.models import ConsumerUnit, University
 from utils.cnpj_validator_util import CnpjValidator
 
 
-class UniversitySerializer(serializers.HyperlinkedModelSerializer):
+class UniversitySerializer(serializers.ModelSerializer):
     class Meta:
         model = University
         fields = [
-            "url",
             "id",
             "name",
             "acronym",
@@ -30,23 +27,13 @@ class UniversitySerializer(serializers.HyperlinkedModelSerializer):
         return cnpj
 
 
-class ConsumerUnitSerializer(serializers.HyperlinkedModelSerializer):
-    name = serializers.CharField()
-    code = serializers.CharField()
-    is_active = serializers.BooleanField()
-    university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all())
-    total_installed_power = serializers.DecimalField(
-        max_digits=7,
-        min_value=Decimal("0.00"),
-        decimal_places=2,
-        allow_null=True,
-    )
+class ConsumerUnitSerializer(serializers.ModelSerializer):
+    university = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = ConsumerUnit
         fields = [
             "id",
-            "url",
             "name",
             "code",
             "is_active",
@@ -57,36 +44,6 @@ class ConsumerUnitSerializer(serializers.HyperlinkedModelSerializer):
             "total_installed_power",
             "created_on",
         ]
-
-
-class ListConsumerUnitSerializerForDocs(ConsumerUnitSerializer):
-    is_favorite = serializers.BooleanField()
-
-    class Meta:
-        model = ConsumerUnit
-        fields = [
-            "id",
-            "url",
-            "name",
-            "code",
-            "is_active",
-            "date",
-            "pending_energy_bills_number",
-            "university",
-            "created_on",
-            "is_current_energy_bill_filled",
-            "is_favorite",
-        ]
-
-
-class ConsumerUnitParamsSerializer(serializers.Serializer):
-    university_id = serializers.IntegerField()
-
-
-class UniversityUserAuthenticatedSerializerForDocs(serializers.ModelSerializer):
-    name = serializers.CharField()
-    code = serializers.CharField()
-    is_active = serializers.BooleanField()
 
 
 class ConsumerUnitCreateSerializer(serializers.ModelSerializer):

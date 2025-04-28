@@ -8,7 +8,6 @@ from tariffs.models import Tariff
 
 @receiver(post_save, sender=Tariff)
 def trigger_tariffs(sender, instance, created, **kwargs):
-
     distributor = instance.distributor
     subgroup = instance.subgroup
     contracts = Contract.objects.filter(distributor=distributor, subgroup=subgroup)
@@ -20,7 +19,7 @@ def trigger_tariffs(sender, instance, created, **kwargs):
             recommendation_instance = Recommendation.objects.get(consumer_unit=unit)
             recommendation_instance.isValid = False
             recommendation_instance.save()
-            #print(f"Recomendação inválida para o consumidor: {unit}", flush=True)
+            # print(f"Recomendação inválida para o consumidor: {unit}", flush=True)
         except Recommendation.DoesNotExist:
-           # print(f"Nenhuma recomendação encontrada para o consumidor: {unit}", flush=True)
-           pass
+            # print(f"Nenhuma recomendação encontrada para o consumidor: {unit}", flush=True)
+            pass
