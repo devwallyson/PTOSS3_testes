@@ -41,13 +41,11 @@ def serialize_with_order(data):
     return json.dumps(OrderedDict(data))
 
 
-
 def process_recommendation(consumer_unit_id):
-
     try:
-            consumer_unit = ConsumerUnit.objects.get(pk=consumer_unit_id)
+        consumer_unit = ConsumerUnit.objects.get(pk=consumer_unit_id)
     except ConsumerUnit.DoesNotExist:
-            return Response({"errors": ["Consumer unit does not exist"]}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"errors": ["Consumer unit does not exist"]}, status=status.HTTP_404_NOT_FOUND)
 
     if not consumer_unit.is_active:
         return Response({"errors": ["Consumer unit is not active"]}, status=status.HTTP_400_BAD_REQUEST)
@@ -63,7 +61,7 @@ def process_recommendation(consumer_unit_id):
         errors.append(TariffsNotFoundError)
 
     consumption_history, pending_bills_dates, atypical_bills_count = StaticGetters.get_consumption_history(
-                consumer_unit, contract
+        consumer_unit, contract
     )
 
     consumption_history_length = len(consumption_history)
@@ -76,19 +74,17 @@ def process_recommendation(consumer_unit_id):
                 NotEnoughEnergyBills if atypical_bills_count == 0 else NotEnoughEnergyBillsWithAtypical,
                 (6) if atypical_bills_count == 0 else (6 + atypical_bills_count),
             )
-            )
+        )
 
     elif consumption_history_length + atypical_bills_count < settings.IDEAL_ENERGY_BILLS_FOR_RECOMMENDATION:
         warnings.append(
-            ErrorMensageParser.parse(
-                PendingBillsWarnning, (pending_num, "fatura" if pending_num == 1 else "faturas")
-            )
+            ErrorMensageParser.parse(PendingBillsWarnning, (pending_num, "fatura" if pending_num == 1 else "faturas"))
         )
 
     if not is_missing_tariff and (
-            blue.end_date < date.today() or (contract.subgroup not in ["A2", "A3"] and green.end_date < date.today())
+        blue.end_date < date.today() or (contract.subgroup not in ["A2", "A3"] and green.end_date < date.today())
     ):
-            warnings.append(ExpiredTariffWarnning)
+        warnings.append(ExpiredTariffWarnning)
 
     calculator = None
     if not is_missing_tariff:
@@ -112,7 +108,8 @@ def process_recommendation(consumer_unit_id):
         # FIXME: temporário
         fill_history_with_pending_dates(consumption_history, pending_bills_dates)
 
-    rc = (recommendation,
+    rc = (
+        recommendation,
         current_contract,
         consumption_history,
         contract,
@@ -121,7 +118,8 @@ def process_recommendation(consumer_unit_id):
         green,
         errors,
         warnings,
-        consumption_history_length)
+        consumption_history_length,
+    )
 
     return rc
 
@@ -144,7 +142,7 @@ def serializeSeries(serie, a):
                 # If not a datetime, try to parse as a number
                 try:
                     # Check if the string is a valid number
-                    if item.isdigit() or (item.replace('.', '', 1).isdigit() and item.count('.') < 2):
+                    if item.isdigit() or (item.replace(".", "", 1).isdigit() and item.count(".") < 2):
                         num = float(item)
                         return int(num) if num.is_integer() else num
                 except ValueError:
@@ -158,10 +156,6 @@ def serializeSeries(serie, a):
             return str(item)
 
     return [convert_item(item) for item in serie]
-
-
-
-
 
 
 def save_recommendation(
@@ -195,49 +189,38 @@ def save_recommendation(
                 "warnings": warnings,
                 "dates": dates_list,
                 "shouldRenewContract": False,
-                "currentContractCostsPlot":{
+                "currentContractCostsPlot": {
                     "consumptionCostInReais": serializeSeries(
-                        current_contract_costs["consumption_cost_in_reais"],"consumption_cost_in_reais"),
+                        current_contract_costs["consumption_cost_in_reais"], "consumption_cost_in_reais"
+                    ),
                     "demandCostInReais": serializeSeries(
-                        current_contract_costs["demand_cost_in_reais"],"demand_cost_in_reais")
-
+                        current_contract_costs["demand_cost_in_reais"], "demand_cost_in_reais"
+                    ),
                 },
                 "currentTotalCost": current_total_cost,
-                 }
+            },
         )
         return recommendation_instance, created
     else:
-
-
         costs_comparison = _generate_plot_costs_comparison(recommendation)
         contracts_comparison, totals = _generate_table_contracts_comparison(recommendation)
         costs_ratio = totals["absolute_difference"] / totals["total_cost_in_reais_in_current"]
         nominal_savings_percentage = max(0, round(costs_ratio, 3) * 100)
         detailed_contracts_costs_comparison = _generate_plot_detailed_contracts_costs_comparison(recommendation)
 
-
-
-
-
         contracts_comparison_table = []
         for comparison in contracts_comparison:
-             entry = {
-                "absoluteDifference": comparison['absolute_difference'],
-                "consumptionCostInReaisInRecommended": comparison['consumption_cost_in_reais_in_recommended'],
-                "demandCostInReaisInRecommended": comparison['demand_cost_in_reais_in_recommended'],
-                "totalCostInReaisInRecommended": comparison['total_cost_in_reais_in_recommended'],
-                "consumptionCostInReaisInCurrent": comparison['consumption_cost_in_reais_in_current'],
-                "demandCostInReaisInCurrent": comparison['demand_cost_in_reais_in_current'],
-                "totalCostInReaisInCurrent": comparison['total_cost_in_reais_in_current'],
-                "date": comparison['date'].isoformat()
-
-             }
-             contracts_comparison_table.append(entry)
-
-
-
-
-
+            entry = {
+                "absoluteDifference": comparison["absolute_difference"],
+                "consumptionCostInReaisInRecommended": comparison["consumption_cost_in_reais_in_recommended"],
+                "demandCostInReaisInRecommended": comparison["demand_cost_in_reais_in_recommended"],
+                "totalCostInReaisInRecommended": comparison["total_cost_in_reais_in_recommended"],
+                "consumptionCostInReaisInCurrent": comparison["consumption_cost_in_reais_in_current"],
+                "demandCostInReaisInCurrent": comparison["demand_cost_in_reais_in_current"],
+                "totalCostInReaisInCurrent": comparison["total_cost_in_reais_in_current"],
+                "date": comparison["date"].isoformat(),
+            }
+            contracts_comparison_table.append(entry)
 
         recommendation_instance, created = Recommendation.objects.update_or_create(
             consumer_unit_id=consumer_unit_id,
@@ -252,50 +235,51 @@ def save_recommendation(
                 "shouldRenewContract": costs_ratio > settings.MINIMUM_PERCENTAGE_DIFFERENCE_FOR_CONTRACT_RENOVATION,
                 "energyBillsCount": energy_bills_count,
                 "nominalSavingsPercentage": nominal_savings_percentage,
-
                 "tariffStartDate": blue.start_date,
                 "tariffEndDate": blue.end_date,
-
                 "recommendedContract": {
-                        "subgroup": contract.subgroup,
-                        "tariffFlag": recommendation.tariff_flag,
-                        "offPeakDemandInKw": float(recommendation.off_peak_demand_in_kw),
-                        "peakDemandInKw": float(recommendation.peak_demand_in_kw),
-                    },
-                "costsComparisonPlot":{
-                         "date": serializeSeries(costs_comparison["date"],"date"),
-                         "totalCostInReaisInRecommended": serializeSeries(
-                             costs_comparison["total_cost_in_reais_in_recommended"],"total_cost_in_reais_in_recommended"),
-                         "totalCostInReaisInCurrent": serializeSeries(
-                             costs_comparison["total_cost_in_reais_in_current"],"total_cost_in_reais_in_current"),
-                         "totalTotalCostInReaisInCurrent": costs_comparison["total_total_cost_in_reais_in_current"],
-                         "totalTotalCostInReaisInRecommended": (
-                             costs_comparison["total_total_cost_in_reais_in_recommended"])
-                    } ,
+                    "subgroup": contract.subgroup,
+                    "tariffFlag": recommendation.tariff_flag,
+                    "offPeakDemandInKw": float(recommendation.off_peak_demand_in_kw),
+                    "peakDemandInKw": float(recommendation.peak_demand_in_kw),
+                },
+                "costsComparisonPlot": {
+                    "date": serializeSeries(costs_comparison["date"], "date"),
+                    "totalCostInReaisInRecommended": serializeSeries(
+                        costs_comparison["total_cost_in_reais_in_recommended"], "total_cost_in_reais_in_recommended"
+                    ),
+                    "totalCostInReaisInCurrent": serializeSeries(
+                        costs_comparison["total_cost_in_reais_in_current"], "total_cost_in_reais_in_current"
+                    ),
+                    "totalTotalCostInReaisInCurrent": costs_comparison["total_total_cost_in_reais_in_current"],
+                    "totalTotalCostInReaisInRecommended": (
+                        costs_comparison["total_total_cost_in_reais_in_recommended"]
+                    ),
+                },
                 "contractsComparisonTotals": {
-                        "absoluteDifference": totals["absolute_difference"],
-                        "consumptionCostInReaisInRecommended": totals["consumption_cost_in_reais_in_recommended"],
-                       "demandCostInReaisInRecommended": totals["demand_cost_in_reais_in_recommended"],
-                       "totalCostInReaisInRecommended": totals["total_cost_in_reais_in_recommended"],
-                       "consumptionCostInReaisInCurrent": totals["consumption_cost_in_reais_in_current"],
-                       "demandCostInReaisInCurrent": totals["demand_cost_in_reais_in_current"],
-                       "totalCostInReaisInCurrent": totals["total_cost_in_reais_in_current"],
-                    },
+                    "absoluteDifference": totals["absolute_difference"],
+                    "consumptionCostInReaisInRecommended": totals["consumption_cost_in_reais_in_recommended"],
+                    "demandCostInReaisInRecommended": totals["demand_cost_in_reais_in_recommended"],
+                    "totalCostInReaisInRecommended": totals["total_cost_in_reais_in_recommended"],
+                    "consumptionCostInReaisInCurrent": totals["consumption_cost_in_reais_in_current"],
+                    "demandCostInReaisInCurrent": totals["demand_cost_in_reais_in_current"],
+                    "totalCostInReaisInCurrent": totals["total_cost_in_reais_in_current"],
+                },
                 "currentContractCostsPlot": {
-                        "consumptionCostInReais": serializeSeries(
-                            current_contract_costs["consumption_cost_in_reais"],"consumption_cost_in_reais"),
-                        "demandCostInReais": serializeSeries(
-                            current_contract_costs["demand_cost_in_reais"],"demand_cost_in_reais")
-
-                    },
+                    "consumptionCostInReais": serializeSeries(
+                        current_contract_costs["consumption_cost_in_reais"], "consumption_cost_in_reais"
+                    ),
+                    "demandCostInReais": serializeSeries(
+                        current_contract_costs["demand_cost_in_reais"], "demand_cost_in_reais"
+                    ),
+                },
                 "detailedContractsCostsComparisonPlot": detailed_contracts_costs_comparison,
                 "currentTotalCost": current_total_cost,
-
-
-            }
+            },
         )
 
         return recommendation_instance, created
+
 
 def get_recommendation(consumer_unit_id):
     try:
@@ -303,8 +287,3 @@ def get_recommendation(consumer_unit_id):
     except Recommendation.DoesNotExist:
         recommendation = None
     return recommendation
-
-
-
-
-

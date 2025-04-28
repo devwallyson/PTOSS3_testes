@@ -1,7 +1,7 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -200,7 +200,7 @@ class Password:
             raise Exception("Send email first access password: " + str(error))
 
 
-class ResetPasswordByAdmin(generics.GenericAPIView):
+class ResetPasswordByAdmin(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
@@ -226,7 +226,7 @@ CODE_PASSWORD_TOKEN_EXPIRED = 2  # Email seja agendado com um novo Password Toke
 
 @authentication_classes([])
 @permission_classes([])
-class ResetPassword(generics.GenericAPIView):
+class ResetPassword(APIView):
     @swagger_auto_schema(
         query_serializer=serializers.ResetPasswordParamsSerializer,
         responses={200: serializers.ResetPasswordParamsForDocs},
@@ -267,7 +267,7 @@ class ResetPassword(generics.GenericAPIView):
 
 @authentication_classes([])
 @permission_classes([])
-class ConfirmResetPassword(generics.GenericAPIView):
+class ConfirmResetPassword(APIView):
     @swagger_auto_schema(
         request_body=serializers.ConfirmPasswordBodySerializer, responses={200: serializers.ResetPasswordParamsForDocs}
     )

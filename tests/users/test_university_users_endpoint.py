@@ -34,8 +34,8 @@ class TestUsersEndpoint:
             self.consumer_units.append(
                 ConsumerUnit(
                     id=i + 1,
-                    name=f"UC {i+1}",
-                    code=f"{i+1}",
+                    name=f"UC {i + 1}",
+                    code=f"{i + 1}",
                     university=self.university,
                     is_active=True,
                     created_on=date.today(),

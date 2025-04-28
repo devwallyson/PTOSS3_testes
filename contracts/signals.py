@@ -13,8 +13,9 @@ def trigger_contracts(sender, instance, created, **kwargs):
         recommendation_instance.isValid = False
         recommendation_instance.save()
     except Recommendation.DoesNotExist:
-        #print(f"Nenhuma recomendação encontrada para o consumidor: {consumer_unit.id}", flush=True)
+        # print(f"Nenhuma recomendação encontrada para o consumidor: {consumer_unit.id}", flush=True)
         pass
+
 
 @receiver(post_save, sender=EnergyBill)
 def trigger_bills(sender, instance, created, **kwargs):
@@ -28,13 +29,12 @@ def trigger_bills(sender, instance, created, **kwargs):
         if recommendation_instance.dates:
             start_date_calculated = min(recommendation_instance.dates)
             end_date_calculated = max(recommendation_instance.dates)
-            in_date_range = (start_date_calculated <= instance.date <= end_date_calculated)
+            in_date_range = start_date_calculated <= instance.date <= end_date_calculated
             in_tariff_range = (
                 recommendation_instance.tariffStartDate <= instance.date <= recommendation_instance.tariffEndDate
-                )
-            after_tariff_end = (instance.date >= recommendation_instance.tariffEndDate)
-            after_end_date = (instance.date >= end_date_calculated)
-
+            )
+            after_tariff_end = instance.date >= recommendation_instance.tariffEndDate
+            after_end_date = instance.date >= end_date_calculated
 
             if in_date_range or in_tariff_range or after_tariff_end or after_end_date:
                 try:
@@ -42,7 +42,7 @@ def trigger_bills(sender, instance, created, **kwargs):
                     recommendation_instance.isValid = False
                     recommendation_instance.save()
                 except Recommendation.DoesNotExist:
-                    #print(f"Nenhuma recomendação encontrada para o consumidor: {consumer_unit.id}", flush=True)
+                    # print(f"Nenhuma recomendação encontrada para o consumidor: {consumer_unit.id}", flush=True)
                     pass
             else:
                 print("A data da fatura NÃO está no intervalo analisado", flush=True)
@@ -53,4 +53,3 @@ def trigger_bills(sender, instance, created, **kwargs):
         print(f"Nenhuma recomendação encontrada para a unidade consumidora: {consumer_unit.id}", flush=True)
     except Exception as e:
         print(f"Ocorreu um erro: {str(e)}", flush=True)
-

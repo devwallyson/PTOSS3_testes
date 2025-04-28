@@ -32,7 +32,6 @@ class RecommendationViewSet(ViewSet):
             recommendation = Recommendation.objects.filter(consumer_unit_id=consumer_unit_id).first()
 
             if recommendation is None or not recommendation.isValid:
-
                 # Processa a nova recomendação
                 pr = process_recommendation(consumer_unit_id)
                 recommendation_instance, created = save_recommendation(consumer_unit_instance, *pr)
@@ -48,4 +47,3 @@ class RecommendationViewSet(ViewSet):
         except Exception as e:
             print(f"Ocorreu um erro: {e}", flush=True)
             return JsonResponse({"error": "Ocorreu um erro inesperado."}, status=500)
-

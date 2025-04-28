@@ -8,7 +8,9 @@ class Command(BaseCommand):
     help = "Seed university admin users for development/audit purposes"
 
     def add_arguments(self, parser):
-        parser.add_argument("--password", type=str, default="audit", help="Password for the seeded users")
+        parser.add_argument(
+            "--password", type=UniversityUser.Type, default="audit", help="Password for the seeded users"
+        )
         parser.add_argument("-d", "--delete", action="store_true", help="Delete all existing users before seeding")
 
     def handle(self, *args, **kwargs):
@@ -35,7 +37,7 @@ class Command(BaseCommand):
             email = f"admin@{(university.acronym or 'unknown').lower()}.com"
             UniversityUser.objects.create_superuser(
                 university=university,
-                type=UniversityUser.university_admin_user_type,
+                type=UniversityUser.Type.UNIVERSITY_ADMIN,
                 first_name="Admin",
                 last_name="Audit",
                 email=email,

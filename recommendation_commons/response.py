@@ -203,4 +203,3 @@ def build_response(
             "current_total_cost": current_total_cost,
         }
     )
-

@@ -16,7 +16,7 @@ from rest_framework.viewsets import ModelViewSet, ViewSet
 from universities.models import ConsumerUnit
 from users.requests_permissions import RequestsPermissions
 from utils.endpoints_util import EndpointsUtils
-from utils.mixins.cache_mixin import CachedViewSetMixin
+from utils.mixins.cache_mixin import CacheModelMixin
 from utils.tariff_util import response_tariffs_of_distributor
 
 from .models import Distributor, Tariff
@@ -27,10 +27,11 @@ from .serializers import (
     DistributorSerializer,
     GetTariffsOfDistributorForDocs,
     GetTariffsOfDistributorParamsSerializer,
+    TariffSerializer,
 )
 
 
-class DistributorViewSet(CachedViewSetMixin, ModelViewSet):
+class DistributorViewSet(CacheModelMixin, ModelViewSet):
     queryset = Distributor.objects.all()
     serializer_class = DistributorSerializer
     cache_key_prefix = "distributor_viewset"
@@ -169,9 +170,9 @@ class DistributorViewSet(CachedViewSetMixin, ModelViewSet):
         return Response(response, status.HTTP_200_OK)
 
 
-class TariffViewSet(CachedViewSetMixin, ViewSet):
+class TariffViewSet(CacheModelMixin, ModelViewSet):
     queryset = Tariff.objects.all()
-    serializer_class = BlueAndGreenTariffsSerializer
+    serializer_class = TariffSerializer
     cache_key_prefix = "tariff_viewset"
     cache_timeout = 3600 * 24
 
@@ -245,8 +246,8 @@ class TariffViewSet(CachedViewSetMixin, ViewSet):
             return Response(
                 {
                     "errors": [
-                        f'Could not find tariffs with '
-                        f'subgroup={data["subgroup"]} and distributor_id={data["distributor"].id}'
+                        f"Could not find tariffs with "
+                        f"subgroup={data['subgroup']} and distributor_id={data['distributor'].id}"
                     ]
                 },
                 status=status.HTTP_404_NOT_FOUND,

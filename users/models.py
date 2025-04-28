@@ -94,9 +94,10 @@ class CustomUser(AbstractUser):
     super_user_type = Type.SUPER_USER
     university_admin_user_type = Type.UNIVERSITY_ADMIN
     university_user_type = Type.UNIVERSITY_USER
+    university_guest_type = Type.UNIVERSITY_GUEST
 
-    all_user_types = [super_user_type, university_admin_user_type, university_user_type]
-    university_user_types = [super_user_type, university_admin_user_type, university_user_type]
+    all_user_types = [super_user_type, university_admin_user_type, university_user_type, university_guest_type]
+    university_user_types = [super_user_type, university_admin_user_type, university_user_type, university_guest_type]
 
     user_types = Type.choices
     password_status = PasswordStatus.choices
@@ -137,6 +138,10 @@ class CustomUser(AbstractUser):
     @property
     def is_manager(self):
         return self.type == CustomUser.Type.UNIVERSITY_ADMIN
+
+    @property
+    def is_operational(self):
+        return self.type == CustomUser.Type.UNIVERSITY_USER
 
     @property
     def is_guest(self):

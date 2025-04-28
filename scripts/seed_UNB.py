@@ -57,7 +57,7 @@ university = University.objects.create(
 
 admin_university_user = UniversityUser.objects.create(
     university=university,
-    type=UniversityUser.university_admin_user_type,
+    type=UniversityUser.Type.UNIVERSITY_ADMIN,
     password='unb',
     email='admin@unb.br',
     first_name="João",
@@ -67,6 +67,7 @@ admin_university_user = UniversityUser.objects.create(
 
 university_user = UniversityUser.objects.create(
     university=university,
+    type=UniversityUser.Type.UNIVERSITY_USER,
     password='unb',
     email='usuario@unb.br',
     first_name="José",

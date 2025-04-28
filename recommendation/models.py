@@ -9,12 +9,12 @@ class Recommendation(models.Model):
         on_delete=models.CASCADE,
         primary_key=True,
     )
-    isValid = models.BooleanField(null=True, blank= True)
-    currentContract = models.ForeignKey('contracts.Contract', on_delete=models.CASCADE, null= True)
+    isValid = models.BooleanField(null=True, blank=True)
+    currentContract = models.ForeignKey("contracts.Contract", on_delete=models.CASCADE, null=True)
     generatedOn = models.DateTimeField(default=timezone.now)
     energyBillsCount = models.IntegerField(null=True, blank=True)
-    currentTotalCost = models.FloatField(null=True, blank= True)
-    shouldRenewContract = models.BooleanField(null=True, blank= True)
+    currentTotalCost = models.FloatField(null=True, blank=True)
+    shouldRenewContract = models.BooleanField(null=True, blank=True)
     nominalSavingsPercentage = models.FloatField(null=True, blank=True)
     dates = ArrayField(models.DateField(), null=True)
     errors = models.JSONField(null=True)
@@ -29,6 +29,7 @@ class Recommendation(models.Model):
 
     def __str__(self):
         return f"Recommendation for Consumer Unit {self.consumer_unit_id}"
+
     def to_dict(self):
         return {
             "consumer_unit": self.consumer_unit.id if self.consumer_unit else None,

@@ -6,4 +6,4 @@ class TariffsConfig(AppConfig):
     name = "tariffs"
 
     def ready(self):
-        import tariffs.signals #noqa F401
+        import tariffs.signals  # noqa F401

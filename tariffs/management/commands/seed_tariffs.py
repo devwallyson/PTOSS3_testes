@@ -50,9 +50,9 @@ class Command(BaseCommand):
 
     def create_tariff(self, sg: str, distributor: Distributor, flag: str, tariffs, tusd_g):
         print(
-            f' Creating subgroup {sg} '
-            f'{ "green" if flag == Tariff.GREEN else "blue" } '
-            f'tariff to distributor: {distributor.name}'
+            f" Creating subgroup {sg} "
+            f"{'green' if flag == Tariff.GREEN else 'blue'} "
+            f"tariff to distributor: {distributor.name}"
         )
 
         tariff = {

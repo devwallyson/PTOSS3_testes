@@ -1,337 +1,136 @@
-import json
-
 from datetime import datetime
+from decimal import Decimal
 
 import pytest
 
 from rest_framework import status
-from rest_framework.test import APIClient
 
 from contracts.models import EnergyBill
-from tests.test_utils import create_objects_test_utils, dicts_test_utils
+from tests.fixtures import admin_a, consumer_unit_a, contract_a, distributor_a, university_a
 
 
 @pytest.mark.django_db
 class TestEnergyBillViewSetTests:
-    def setup_method(self):
-        self.university_dict = dicts_test_utils.university_dict_1
-        self.user_dict = dicts_test_utils.university_user_dict_1
-        self.university = create_objects_test_utils.create_test_university(self.university_dict)
-        self.user = create_objects_test_utils.create_test_university_user(self.user_dict, self.university)
-        self.client = APIClient()
-        self.client.login(email=self.user_dict["email"], password=self.user_dict["password"])
-
-        self.distributor_dict = dicts_test_utils.distributor_dict_1
-        self.distributor = create_objects_test_utils.create_test_distributor(self.distributor_dict, self.university)
-
-    def test_create_energy_bill_success(self):
-        # Crie uma unidade do consumidor
-        consumer_unit_data = {
-            "name": "Faculdade do Gama",
-            "code": "111111111",
-            "created_on": "2022-10-02",
-            "is_active": True,
-            "university": self.university.id,
-            "total_installed_power": 12,
-        }
-        consumer_unit_response = self.client.post("/api/consumer-units/", consumer_unit_data, format="json")
-        created_consumer_unit = json.loads(consumer_unit_response.content)
-
-        assert consumer_unit_response.status_code == status.HTTP_201_CREATED
-        assert "id" in created_consumer_unit, f"Chave 'id' ausente em {created_consumer_unit}"
-
-        # Crie um contrato associado à unidade do consumidor
-        contract_data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "start_date": "2023-01-01",  # Adicione a data de início do contrato
-            "end_date": "2023-12-31",  # Adicione a data de término do contrato
-            "subgroup": "A2",
-            "distributor": self.distributor.id,
-            "peak_contracted_demand_in_kw": 33,
-            "off_peak_contracted_demand_in_kw": 33,
-        }
-        contract_response = self.client.post("/api/contracts/", contract_data, format="json")
-        created_contract = json.loads(contract_response.content)
-
-        print(contract_response.status_code)
-        print(contract_response.content)
-
-        assert contract_response.status_code == status.HTTP_201_CREATED
-
-        assert "id" in created_contract, f"Chave 'id' ausente em {created_contract}"
-
-        # Crie uma conta de energia usando a unidade do consumidor e o contrato criados
+    def test_create_energy_bill_success(self, admin_a, client, consumer_unit_a, contract_a):
         data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "contract": created_contract["id"],
+            "consumer_unit": consumer_unit_a.id,
+            "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
         }
 
-        response = self.client.post("/api/energy-bills/", data, format="json")
-
-        print(response.status_code)
-        print(response.content)
-
+        client.force_authenticate(user=admin_a)
+        response = client.post("/api/energy-bills/", data, format="json")
         assert response.status_code == status.HTTP_201_CREATED
 
-        # Verifique se a conta de energia foi realmente criada no banco de dados
-        energy_bill = EnergyBill.objects.get(
-            consumer_unit=created_consumer_unit["id"], date=datetime.strptime("2023-01-01", "%Y-%m-%d").date()
-        )
-        assert (
-            energy_bill.anotacoes == "Some notes"
-        ), f"Valor esperado: 'Some notes', Valor atual: {energy_bill.anotacoes}"
+        energy_bill = EnergyBill.objects.get(consumer_unit=consumer_unit_a.id)
+        assert energy_bill.anotacoes == data["anotacoes"]
 
-    def test_create_energy_bill_invalid_date(self):
+    def test_create_energy_bill_invalid_date(self, admin_a, client, consumer_unit_a):
         data = {
-            "consumer_unit": 1,
+            "consumer_unit": consumer_unit_a.id,
             "date": "invalid_date",
         }
 
-        response = self.client.post("/api/energy-bills/", data, format="json")
+        client.force_authenticate(user=admin_a)
+        response = client.post("/api/energy-bills/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_create_energy_invalid_consumption(self):
+    def test_create_energy_invalid_consumption(self, admin_a, client, consumer_unit_a):
         data = {
-            "consumer_unit": 1,
+            "consumer_unit": consumer_unit_a.id,
             "date": "2024-05-06",
             "off_peak_consumption_in_kwh": 0.00,
             "off_peak_measured_demand_in_kw": 0.00,
         }
-
-        response = self.client.post("/api/energy-bills/", data, format="json")
+        client.force_authenticate(user=admin_a)
+        response = client.post("/api/energy-bills/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_create_energy_bill_long_notes(self):
+    def test_create_energy_bill_long_notes(self, admin_a, client, consumer_unit_a):
         data = {
-            "consumer_unit": 1,
+            "consumer_unit": consumer_unit_a.id,
             "date": "2023-01-01",
             "anotacoes": "A" * 1001,
         }
 
-        response = self.client.post("/api/energy-bills/", data, format="json")
+        client.force_authenticate(user=admin_a)
+        response = client.post("/api/energy-bills/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_create_duplicate_energy_bill(self):
-        # Crie uma unidade do consumidor
-        consumer_unit_data = {
-            "name": "Faculdade do Gama",
-            "code": "111111111",
-            "created_on": "2022-10-02",
-            "is_active": True,
-            "university": self.university.id,
-            "total_installed_power": None,
-        }
-        consumer_unit_response = self.client.post("/api/consumer-units/", consumer_unit_data, format="json")
-        created_consumer_unit = json.loads(consumer_unit_response.content)
-
-        assert consumer_unit_response.status_code == status.HTTP_201_CREATED
-        assert "id" in created_consumer_unit, f"Chave 'id' ausente em {created_consumer_unit}"
-
-        # Crie um contrato associado à unidade do consumidor
-        contract_data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "start_date": "2023-01-01",  # Adicione a data de início do contrato
-            "end_date": "2023-12-31",  # Adicione a data de término do contrato
-            "subgroup": "A2",
-            "distributor": self.distributor.id,
-            "peak_contracted_demand_in_kw": 33,
-            "off_peak_contracted_demand_in_kw": 33,
-        }
-        contract_response = self.client.post("/api/contracts/", contract_data, format="json")
-        created_contract = json.loads(contract_response.content)
-
-        print(contract_response.status_code)
-        print(contract_response.content)
-
-        assert contract_response.status_code == status.HTTP_201_CREATED
-
-        assert "id" in created_contract, f"Chave 'id' ausente em {created_contract}"
-
-        # Crie uma conta de energia usando a unidade do consumidor e o contrato criados
+    def test_create_duplicate_energy_bill(self, admin_a, client, consumer_unit_a, contract_a):
         data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "contract": created_contract["id"],
+            "consumer_unit": consumer_unit_a.id,
+            "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
         }
 
-        response = self.client.post("/api/energy-bills/", data, format="json")
+        client.force_authenticate(user=admin_a)
+        response1 = client.post("/api/energy-bills/", data, format="json")
+        assert response1.status_code == status.HTTP_201_CREATED
 
-        print(response.status_code)
-        print(response.content)
+        response2 = client.post("/api/energy-bills/", data, format="json")
+        assert response2.status_code == status.HTTP_400_BAD_REQUEST
 
-        assert response.status_code == status.HTTP_201_CREATED
-
-        response = self.client.post("/api/energy-bills/", data, format="json")
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-    def test_max_peak_and_offpeak_consumption_values(self):
-        consumer_unit_data = {
-            "name": "Faculdade do Gama",
-            "code": "111111111",
-            "created_on": "2022-10-02",
-            "is_active": True,
-            "university": self.university.id,
-            "total_installed_power": 12,
-        }
-        consumer_unit_response = self.client.post("/api/consumer-units/", consumer_unit_data, format="json")
-        created_consumer_unit = json.loads(consumer_unit_response.content)
-
-        assert consumer_unit_response.status_code == status.HTTP_201_CREATED
-        assert "id" in created_consumer_unit, f"Chave 'id' ausente em {created_consumer_unit}"
-
-        contract_data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "start_date": "2023-01-01",
-            "end_date": "2023-12-31",
-            "subgroup": "A2",
-            "distributor": self.distributor.id,
-            "peak_contracted_demand_in_kw": 33,
-            "off_peak_contracted_demand_in_kw": 33,
-        }
-        contract_response = self.client.post("/api/contracts/", contract_data, format="json")
-        created_contract = json.loads(contract_response.content)
-
-        print(contract_response.status_code)
-        print(contract_response.content)
-
-        assert contract_response.status_code == status.HTTP_201_CREATED
-
-        assert "id" in created_contract, f"Chave 'id' ausente em {created_contract}"
-
+    def test_max_peak_and_offpeak_consumption_values(self, admin_a, client, consumer_unit_a, contract_a):
         data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "contract": created_contract["id"],
+            "consumer_unit": consumer_unit_a.id,
+            "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
             "peak_consumption_in_kwh": 9999999.99,
             "off_peak_consumption_in_kwh": 9999999.99,
         }
 
-        response = self.client.post("/api/energy-bills/", data, format="json")
-
-        print(response.status_code)
-        print(response.content)
-
+        client.force_authenticate(user=admin_a)
+        response = client.post("/api/energy-bills/", data, format="json")
         assert response.status_code == status.HTTP_201_CREATED
 
         energy_bill = EnergyBill.objects.get(
-            consumer_unit=created_consumer_unit["id"], date=datetime.strptime("2023-01-01", "%Y-%m-%d").date()
+            consumer_unit=consumer_unit_a.id, date=datetime.strptime("2023-01-01", "%Y-%m-%d").date()
         )
-        assert (
-            energy_bill.anotacoes == "Some notes"
-        ), f"Valor esperado: 'Some notes', Valor atual: {energy_bill.anotacoes}"
+        assert energy_bill.anotacoes == "Some notes"
+        assert energy_bill.peak_consumption_in_kwh == Decimal("9999999.99")
+        assert energy_bill.off_peak_consumption_in_kwh == Decimal("9999999.99")
 
-    def test_max_peak_and_offpeak_measured_values(self):
-        consumer_unit_data = {
-            "name": "Faculdade do Gama",
-            "code": "111111111",
-            "created_on": "2022-10-02",
-            "is_active": True,
-            "university": self.university.id,
-            "total_installed_power": 12,
-        }
-        consumer_unit_response = self.client.post("/api/consumer-units/", consumer_unit_data, format="json")
-        created_consumer_unit = json.loads(consumer_unit_response.content)
-
-        assert consumer_unit_response.status_code == status.HTTP_201_CREATED
-        assert "id" in created_consumer_unit, f"Chave 'id' ausente em {created_consumer_unit}"
-
-        contract_data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "start_date": "2023-01-01",
-            "end_date": "2023-12-31",
-            "subgroup": "A2",
-            "distributor": self.distributor.id,
-            "peak_contracted_demand_in_kw": 33,
-            "off_peak_contracted_demand_in_kw": 33,
-        }
-        contract_response = self.client.post("/api/contracts/", contract_data, format="json")
-        created_contract = json.loads(contract_response.content)
-
-        print(contract_response.status_code)
-        print(contract_response.content)
-
-        assert contract_response.status_code == status.HTTP_201_CREATED
-
-        assert "id" in created_contract, f"Chave 'id' ausente em {created_contract}"
-
+    def test_max_peak_and_offpeak_measured_values(self, admin_a, client, consumer_unit_a, contract_a):
         data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "contract": created_contract["id"],
+            "consumer_unit": consumer_unit_a.id,
+            "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
             "peak_measured_demand_in_kw": 9999999.99,
             "off_peak_measured_demand_in_kw": 9999999.99,
         }
 
-        response = self.client.post("/api/energy-bills/", data, format="json")
-
-        print(response.status_code)
-        print(response.content)
-
+        client.force_authenticate(user=admin_a)
+        response = client.post("/api/energy-bills/", data, format="json")
         assert response.status_code == status.HTTP_201_CREATED
 
         energy_bill = EnergyBill.objects.get(
-            consumer_unit=created_consumer_unit["id"], date=datetime.strptime("2023-01-01", "%Y-%m-%d").date()
+            consumer_unit=consumer_unit_a.id,
+            date=datetime.strptime("2023-01-01", "%Y-%m-%d").date(),
         )
-        assert (
-            energy_bill.anotacoes == "Some notes"
-        ), f"Valor esperado: 'Some notes', Valor atual: {energy_bill.anotacoes}"
+        assert energy_bill.anotacoes == "Some notes"
+        assert energy_bill.peak_measured_demand_in_kw == Decimal("9999999.99")
+        assert energy_bill.off_peak_measured_demand_in_kw == Decimal("9999999.99")
 
-    def test_exceeding_values_energybill(self):
-        consumer_unit_data = {
-            "name": "Faculdade do Gama",
-            "code": "111111111",
-            "created_on": "2022-10-02",
-            "is_active": True,
-            "university": self.university.id,
-            "total_installed_power": 12,
-        }
-        consumer_unit_response = self.client.post("/api/consumer-units/", consumer_unit_data, format="json")
-        created_consumer_unit = json.loads(consumer_unit_response.content)
-
-        assert consumer_unit_response.status_code == status.HTTP_201_CREATED
-        assert "id" in created_consumer_unit, f"Chave 'id' ausente em {created_consumer_unit}"
-
-        contract_data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "start_date": "2023-01-01",
-            "end_date": "2023-12-31",
-            "subgroup": "A2",
-            "distributor": self.distributor.id,
-            "peak_contracted_demand_in_kw": 33,
-            "off_peak_contracted_demand_in_kw": 33,
-        }
-        contract_response = self.client.post("/api/contracts/", contract_data, format="json")
-        created_contract = json.loads(contract_response.content)
-
-        print(contract_response.status_code)
-        print(contract_response.content)
-
-        assert contract_response.status_code == status.HTTP_201_CREATED
-
-        assert "id" in created_contract, f"Chave 'id' ausente em {created_contract}"
-
+    def test_exceeding_values_energybill(self, admin_a, client, consumer_unit_a, contract_a):
         data = {
-            "consumer_unit": created_consumer_unit["id"],
-            "contract": created_contract["id"],
+            "consumer_unit": consumer_unit_a.id,
+            "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
-            "peak_consumption_demand_in_kw": 10000000,
-            "off_peak_consumption_demand_in_kw": 10000000,
+            "peak_consumption_in_kwh": 10000000,
+            "off_peak_consumption_in_kwh": 10000000,
             "peak_measured_demand_in_kw": 10000000,
             "off_peak_measured_demand_in_kw": 10000000,
         }
 
-        response = self.client.post("/api/energy-bills/", data, format="json")
-
+        client.force_authenticate(user=admin_a)
+        response = client.post("/api/energy-bills/", data, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        print(response.status_code)
-        print(response.content)
-
         assert "Ensure that there are no more than 7 digits before the decimal point." in response.content.decode(
             "utf-8"
         )

@@ -10,6 +10,9 @@ from .recommendation import Recommendation
 
 
 class University(models.Model):
+    class Meta:
+        verbose_name_plural = "Universities"
+
     name = models.CharField(
         max_length=100,
         blank=False,
