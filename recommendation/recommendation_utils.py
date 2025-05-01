@@ -5,11 +5,11 @@ from datetime import date, datetime
 
 from django.conf import settings
 from pandas import DataFrame
-from rest_framework import status
-from rest_framework.response import Response
 
 from contracts.models import Contract
 from mec_energia.error_response_manage import (
+    ConsumerUnitDoesNotExist,
+    ConsumerUnitIsNotActive,
     ErrorMensageParser,
     ExpiredTariffWarnning,
     NotEnoughEnergyBills,
@@ -42,18 +42,20 @@ def serialize_with_order(data):
 
 
 def process_recommendation(consumer_unit_id):
+    errors = []
     try:
         consumer_unit = ConsumerUnit.objects.get(pk=consumer_unit_id)
     except ConsumerUnit.DoesNotExist:
-        return Response({"errors": ["Consumer unit does not exist"]}, status=status.HTTP_404_NOT_FOUND)
+        errors.append(ConsumerUnitDoesNotExist)
+        return None, errors
 
     if not consumer_unit.is_active:
-        return Response({"errors": ["Consumer unit is not active"]}, status=status.HTTP_400_BAD_REQUEST)
+        errors.append(ConsumerUnitIsNotActive)
+        return None, errors
 
     contract = consumer_unit.current_contract
     distributor_id = contract.distributor.id
     blue, green = StaticGetters.get_tariffs(contract.subgroup, distributor_id)
-    errors = []
     warnings = []
 
     is_missing_tariff = blue is None or (contract.subgroup not in ["A2", "A3"] and green is None)
@@ -121,7 +123,7 @@ def process_recommendation(consumer_unit_id):
         consumption_history_length,
     )
 
-    return rc
+    return rc, errors
 
 
 def serializeSeries(serie, a):
@@ -182,7 +184,7 @@ def save_recommendation(
         recommendation_instance, created = Recommendation.objects.update_or_create(
             consumer_unit_id=consumer_unit_id.id,
             defaults={
-                "consumer_unit_id": consumer_unit_id,
+                "consumer_unit_id": consumer_unit_id.id,
                 "isValid": True,
                 "generatedOn": datetime.now(),
                 "errors": errors,

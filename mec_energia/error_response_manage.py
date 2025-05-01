@@ -12,6 +12,8 @@ FormatDateError = (8, 'O mês deve ser uma data nos formatos "mm/aaaa", "mmm/aaa
 ValueMaxError = (9, "Valores de Consumo e Demanda devem ser números entre 0,1 e 9.999.999,99")
 AlreadyHasEnergyBill = (10, "Já existe uma fatura lançada neste mês")
 EnergyBillValueError = (11, "O valor da fatura deve ser um número entre 0,1 e 99.999.999,99")
+ConsumerUnitDoesNotExist = (12, "A unidade consumidora não foi encontrada")
+ConsumerUnitIsNotActive = (13, "A unidade consumidora não está ativa")
 
 
 class ErrorMensageParser:
