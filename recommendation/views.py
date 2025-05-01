@@ -33,11 +33,13 @@ class RecommendationViewSet(ViewSet):
 
             if recommendation is None or not recommendation.isValid:
                 # Processa a nova recomendação
-                pr = process_recommendation(consumer_unit_id)
-                recommendation_instance, created = save_recommendation(consumer_unit_instance, *pr)
-                recommendation = Recommendation.objects.get(consumer_unit_id=consumer_unit_id)
+                pr, errors = process_recommendation(consumer_unit_id)
+                if pr is not None:
+                    recommendation_instance, created = save_recommendation(consumer_unit_instance, *pr)
+                    recommendation = Recommendation.objects.get(consumer_unit_id=consumer_unit_id)
+                else:
+                    return JsonResponse(errors, status=400)
 
-            # Se a recomendação é válida, retorna os dados
             data = recommendation.to_dict()
             return JsonResponse(data, safe=False)
 
@@ -46,4 +48,4 @@ class RecommendationViewSet(ViewSet):
             return JsonResponse({"error": "Unidade de consumo não encontrada."}, status=404)
         except Exception as e:
             print(f"Ocorreu um erro: {e}", flush=True)
-            return JsonResponse({"error": "Ocorreu um erro inesperado."}, status=500)
+            return JsonResponse({"error": "Erro na recuperação de dados"}, status=500)
