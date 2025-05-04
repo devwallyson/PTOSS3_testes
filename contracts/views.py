@@ -1,9 +1,10 @@
 import logging
 import os
 
-from datetime import datetime, timedelta
+from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
+from dateutil.relativedelta import relativedelta
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import FileResponse, JsonResponse
@@ -12,6 +13,7 @@ from django.views.decorators.cache import cache_page
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
@@ -368,21 +370,53 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="plot-graph")
     def plot_graph(self, request):
-        consumer_unit_id = request.GET.get("consumer_unit_id")
-
-        if not consumer_unit_id:
+        consumer_unit_id = request.query_params.get("consumer_unit_id", None)
+        if consumer_unit_id is None:
             return Response({"error": "consumer_unit_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        consumer_unit = ConsumerUnit.objects.get(id=consumer_unit_id)
-        energy_bills = EnergyBill.objects.filter(
-            consumer_unit=consumer_unit_id,
-            date__gte=datetime.now().date() - timedelta(days=365),
-        ).order_by("date")
+        consumer_unit = get_object_or_404(ConsumerUnit, id=consumer_unit_id)
 
-        graph_data = {
-            "energy_bills": energy_bills,
-            "contract_data": consumer_unit.current_contract,
-        }
+        current_month = date.today().replace(day=1)
+        months = int(request.query_params.get("months", 12))
+        all_months = [current_month - relativedelta(months=i) for i in range(months - 1, -1, -1)]
 
+        energy_bills_qs = (
+            EnergyBill.objects.filter(
+                consumer_unit=consumer_unit_id,
+                date__gte=all_months[0],
+                date__lte=all_months[-1],
+            )
+            .values(
+                "date",
+                "peak_consumption_in_kwh",
+                "off_peak_consumption_in_kwh",
+                "peak_measured_demand_in_kw",
+                "off_peak_measured_demand_in_kw",
+            )
+            .order_by("date")
+        )
+
+        if not energy_bills_qs.exists():
+            return Response(
+                {"errors": ["No energy bills found for this consumer unit in the time period"]},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        bills_by_month = {bill["date"].strftime("%Y-%m"): bill for bill in energy_bills_qs}
+
+        energy_bills = []
+        for month in all_months:
+            year_month = month.strftime("%Y-%m")
+            bill = bills_by_month.get(year_month, {})
+            bill_data = {
+                "date": month.strftime("%Y-%m-%d"),
+                "peak_consumption_in_kwh": bill.get("peak_consumption_in_kwh"),
+                "off_peak_consumption_in_kwh": bill.get("off_peak_consumption_in_kwh"),
+                "peak_measured_demand_in_kw": bill.get("peak_measured_demand_in_kw"),
+                "off_peak_measured_demand_in_kw": bill.get("off_peak_measured_demand_in_kw"),
+            }
+            energy_bills.append(bill_data)
+
+        graph_data = {"energy_bills": energy_bills, "contract_data": consumer_unit.current_contract}
         serializer = serializers.EnergyBillGraphSerializer(graph_data)
         return Response(serializer.data, status=status.HTTP_200_OK)
