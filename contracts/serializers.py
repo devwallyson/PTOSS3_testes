@@ -140,14 +140,6 @@ class EnergyBillGraphSerializer(serializers.Serializer):
         return repr
 
 
-class ContractListParamsSerializer(serializers.Serializer):
-    consumer_unit_id = serializers.IntegerField()
-
-
-class EnergyBillListParamsSerializer(serializers.Serializer):
-    consumer_unit_id = serializers.IntegerField()
-
-
 class SubgroupSerializerForDocs(serializers.Serializer):
     name = serializers.CharField(read_only=True)
     min = serializers.CharField(read_only=True)

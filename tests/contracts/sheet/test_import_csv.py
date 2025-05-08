@@ -33,7 +33,7 @@ class TestImportXslx:
         )
 
         self.client = APIClient()
-        self.client.login(email=self.user_dict["email"], password=self.user_dict["password"])
+        self.client.force_authenticate(user=self.user)
 
     def test_invalid_csv_header(self):
         csv_path = os.path.join(os.path.dirname(__file__), "files", "file_invalid_header.csv")

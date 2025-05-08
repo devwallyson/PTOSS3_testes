@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from decimal import Decimal
 
 import pytest
 
@@ -10,8 +11,11 @@ def energy_bill_a(db, consumer_unit_a, contract_a):
     return EnergyBill.objects.create(
         consumer_unit=consumer_unit_a,
         contract=contract_a,
-        date=datetime.strptime("2023-01-01", "%Y-%m-%d").date(),
-        anotacoes="Test notes for energy bill A",
+        date=datetime.now().date() - timedelta(days=10),
+        peak_consumption_in_kwh=Decimal("9999999.99"),
+        off_peak_consumption_in_kwh=Decimal("9999999.99"),
+        peak_measured_demand_in_kw=Decimal("9999999.99"),
+        off_peak_measured_demand_in_kw=Decimal("9999999.99"),
     )
 
 
