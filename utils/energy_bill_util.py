@@ -110,19 +110,21 @@ class EnergyBillUtils:
 
     @classmethod
     def check_valid_consumption_demand(cls, energy_bill):
+        EPSILON = 1e-4
+
+        def is_zero(val):
+            return val is not None and abs(val) < EPSILON
+
         off_peak_consumption = energy_bill.off_peak_consumption_in_kwh
         off_peak_measured_demand = energy_bill.off_peak_measured_demand_in_kw
         peak_consumption = energy_bill.peak_consumption_in_kwh
         peak_measured_demand = energy_bill.peak_measured_demand_in_kw
 
-        ## retomar essa lógica quando retirar valores zerados do seed
-        return True
-
         if (
-            (off_peak_consumption and off_peak_consumption == 0)
-            or (off_peak_measured_demand and off_peak_consumption == 0)
-            or (peak_consumption and peak_consumption == 0)
-            or (peak_measured_demand and peak_measured_demand == 0)
+            is_zero(off_peak_consumption)
+            or is_zero(off_peak_measured_demand)
+            or is_zero(peak_consumption)
+            or is_zero(peak_measured_demand)
         ):
             return False
         return True

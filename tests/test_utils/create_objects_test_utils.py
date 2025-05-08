@@ -119,17 +119,17 @@ def create_test_super_user(dict: dict) -> CustomUser:
     return super_user
 
 
-def create_test_university_user(dict: dict, university: University) -> UniversityUser:
-    university_user = UniversityUser.objects.create(
-        first_name=dict["first_name"],
-        last_name=dict["last_name"],
-        email=dict["email"],
-        password=dict["password"],
+def create_test_university_user(data: dict, university: University) -> UniversityUser:
+    user = UniversityUser(
+        first_name=data["first_name"],
+        last_name=data["last_name"],
+        email=data["email"],
         type=CustomUser.Type.UNIVERSITY_USER,
         university=university,
     )
-
-    return university_user
+    user.set_password(data["password"])
+    user.save()
+    return user
 
 
 def create_test_university_admin_user(dict: dict, university: University) -> UniversityUser:

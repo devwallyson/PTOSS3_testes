@@ -6,105 +6,56 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from contracts.models import Contract, EnergyBill
+from contracts.permissions import ContractPermission
 from universities.models import ConsumerUnit
-from users.requests_permissions import RequestsPermissions
-from utils.mixins.cache_mixin import CacheModelMixin
+from utils.mixins.cache_mixin import CacheModelMixin, ReadOnlyCacheMixin
 from utils.subgroup_util import Subgroup
 
 from . import serializers, services
 
 
-class ContractViewSet(CacheModelMixin, ModelViewSet):
+class ContractViewSet(ReadOnlyCacheMixin, ReadOnlyModelViewSet):
     queryset = Contract.objects.all()
     serializer_class = serializers.ContractSerializer
     cache_key_prefix = "contract_viewset"
     cache_timeout = 3600 * 6
+    permission_classes = [ContractPermission]
 
-    def create(self, request, *args, **kwargs):
-        user_types_with_permission = RequestsPermissions.university_user_permissions
-        body_consumer_unit_id = request.data["consumer_unit"]
+    def get_queryset(self):
+        return Contract.objects.filter(consumer_unit__university=self.request.user.university)
 
-        try:
-            consumer_unit = ConsumerUnit.objects.get(id=body_consumer_unit_id)
-        except ObjectDoesNotExist:
-            return Response({"error": "consumer unit does not exist"}, status.HTTP_400_BAD_REQUEST)
-
-        university_id = consumer_unit.university.id
-
-        try:
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university_id)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
-        self.delete_view_cache()
-        return super().create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        user_types_with_permission = RequestsPermissions.university_user_permissions
-        contract = self.get_object()
-        university_id = contract.consumer_unit.university.id
-
-        try:
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university_id)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
-        self.delete_view_cache()
-        return super().update(request, *args, **kwargs)
-
-    @swagger_auto_schema(query_serializer=serializers.ContractListParamsSerializer)
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
     def list(self, request: Request, *args, **kwargs):
-        user_types_with_permission = RequestsPermissions.default_users_permissions
-        params_serializer = serializers.ContractListParamsSerializer(data=request.GET)
-
-        if not params_serializer.is_valid():
-            return Response(params_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
         request_consumer_unit_id = request.GET.get("consumer_unit_id")
-
-        try:
-            consumer_unit = ConsumerUnit.objects.get(id=request_consumer_unit_id)
-        except ObjectDoesNotExist:
-            return Response({"error": "consumer unit does not exist"}, status.HTTP_400_BAD_REQUEST)
-
-        university_id = consumer_unit.university.id
-
-        try:
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university_id)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
-        queryset = Contract.objects.filter(consumer_unit=consumer_unit.id)
+        queryset = self.get_queryset()
+        if request_consumer_unit_id:
+            consumer_unit = get_object_or_404(ConsumerUnit, id=request_consumer_unit_id)
+            university_id = consumer_unit.university.id
+            if self.request.user.university.id != university_id:
+                raise PermissionDenied()
+            queryset = Contract.objects.filter(consumer_unit=consumer_unit.id)
         serializer = serializers.ContractSerializer(queryset, many=True, context={"request": request})
-
         return Response(serializer.data, status.HTTP_200_OK)
 
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
     def retrieve(self, request, pk=None):
-        user_types_with_permission = RequestsPermissions.default_users_permissions
         contract = self.get_object()
-
         university_id = contract.consumer_unit.university.id
-
-        try:
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university_id)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
+        if contract.consumer_unit.university != request.user.university:
+            raise PermissionDenied()
         serializer = self.get_serializer(contract)
         return Response(serializer.data)
 
@@ -120,33 +71,18 @@ class ContractViewSet(CacheModelMixin, ModelViewSet):
         return JsonResponse(subgroups, safe=False)
 
     @swagger_auto_schema(
-        query_serializer=serializers.ContractListParamsSerializer, responses={200: serializers.ContractListSerializer}
+        query_serializer=serializers.ContractListSerializer, responses={200: serializers.ContractListSerializer}
     )
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
     @action(detail=False, methods=["get"], url_path="get-current-contract-of-consumer-unit")
     def get_current_contract_of_consumer_unit(self, request: Request, pk=None):
-        user_types_with_permission = RequestsPermissions.university_user_permissions
-
-        params_serializer = serializers.ContractListParamsSerializer(data=request.GET)
-        if not params_serializer.is_valid():
-            return Response(params_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
         request_consumer_unit_id = request.GET.get("consumer_unit_id")
 
-        try:
-            consumer_unit = ConsumerUnit.objects.get(id=request_consumer_unit_id)
-        except ObjectDoesNotExist:
-            return Response({"error": "consumer unit does not exist"}, status.HTTP_400_BAD_REQUEST)
-
-        university_id = consumer_unit.university.id
-
-        try:
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university_id)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
+        consumer_unit = get_object_or_404(ConsumerUnit, id=request_consumer_unit_id)
+        if consumer_unit.university != request.user.university:
+            raise PermissionDenied()
 
         contract = consumer_unit.current_contract
-
         serializer = serializers.ContractListSerializer(contract, many=False, context={"request": request})
         return Response(serializer.data, status.HTTP_200_OK)
 
@@ -156,117 +92,62 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
     serializer_class = serializers.EnergyBillSerializer
     cache_key_prefix = "energybill_viewset"
     cache_timeout = 3600 * 168  # 3600 segundos * 24  = 1 dia (dados nao mudam com frequência)
+    permission_classes = [ContractPermission]
+
+    def get_queryset(self):
+        return EnergyBill.objects.filter(consumer_unit__university=self.request.user.university)
 
     def retrieve(self, request, pk=None):
         energy_bill = self.get_object()
-        consumer_unit = energy_bill.consumer_unit
-
-        try:
-            RequestsPermissions.check_request_permissions(
-                request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
-            )
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
-
+        if energy_bill.consumer_unit.university != self.request.user.university:
+            raise PermissionDenied()
         serializer = self.get_serializer(energy_bill)
         return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
+    def perform_update(self, serializer):
         energy_bill = self.get_object()
-        consumer_unit = energy_bill.consumer_unit
-        contract = energy_bill.contract
-
-        try:
-            RequestsPermissions.check_request_permissions(
-                request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
-            )
-            RequestsPermissions.check_request_permissions(
-                request.user, RequestsPermissions.default_users_permissions, contract.consumer_unit.university.id
-            )
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
-
-        return super().update(request, *args, **kwargs)
+        serializer.validated_data["consumer_unit"] = energy_bill.consumer_unit
+        serializer.validated_data["contract"] = energy_bill.contract
+        super().perform_update(serializer)
+        self.delete_view_cache()
 
     def create(self, request, *args, **kwargs):
-        consumer_unit_id = request.data.get("consumer_unit")
-        contract_id = request.data.get("contract")
+        consumer_unit = get_object_or_404(ConsumerUnit, id=self.request.data.get("consumer_unit"))
+        contract = get_object_or_404(Contract, id=self.request.data.get("contract"))
+
+        if consumer_unit.university != self.request.user.university:
+            raise PermissionDenied()
+        if contract.consumer_unit.id != consumer_unit.id:
+            raise PermissionDenied()
 
         try:
-            # Verifica se a unidade consumidora e o contrato existem
-            try:
-                consumer_unit = ConsumerUnit.objects.get(id=consumer_unit_id)
-                contract = Contract.objects.get(id=contract_id)
-            except ObjectDoesNotExist:
-                return Response(
-                    {"error": "Consumer unit or contract does not exist"}, status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Verifica permissões
-            try:
-                RequestsPermissions.check_request_permissions(
-                    request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
-                )
-                RequestsPermissions.check_request_permissions(
-                    request.user, RequestsPermissions.default_users_permissions, contract.consumer_unit.university.id
-                )
-            except Exception as error:
-                return Response({"detail": str(error)}, status=status.HTTP_403_FORBIDDEN)
-
-            # Tenta criar a fatura
             response = super().create(request, *args, **kwargs)
+            self.delete_view_cache()
             return response
-
         except Exception as error:
-            # Todas as outras exceções são tratadas como erros de validação
             return Response({"error": str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, *args, **kwargs):
-        energy_bill = self.get_object()
-        consumer_unit = energy_bill.consumer_unit
-        contract = energy_bill.contract
-
-        try:
-            RequestsPermissions.check_request_permissions(
-                request.user, RequestsPermissions.default_users_permissions, consumer_unit.university.id
-            )
-            RequestsPermissions.check_request_permissions(
-                request.user, RequestsPermissions.default_users_permissions, contract.consumer_unit.university.id
-            )
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status=status.HTTP_403_FORBIDDEN)
-
-        return super().destroy(request, *args, **kwargs)
+    def perform_destroy(self, instance):
+        if self.request.user.university != instance.consumer_unit.university:
+            raise PermissionDenied()
+        super().perform_destroy(instance)
+        self.delete_view_cache()
 
     @swagger_auto_schema(
         responses={200: serializers.EnergyBillListSerializerForDocs(many=True)},
-        query_serializer=serializers.EnergyBillListParamsSerializer,
     )
     @method_decorator(cache_page(cache_timeout, key_prefix=cache_key_prefix))
     def list(self, request: Request, *args, **kwargs):
-        user_types_with_permission = RequestsPermissions.default_users_permissions
-
-        params_serializer = serializers.EnergyBillListParamsSerializer(data=request.GET)
-        if not params_serializer.is_valid():
-            return Response(params_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
         request_consumer_unit_id = request.GET.get("consumer_unit_id")
 
-        try:
-            consumer_unit = ConsumerUnit.objects.get(id=request_consumer_unit_id)
-        except ObjectDoesNotExist:
-            return Response({"error": "consumer unit does not exist"}, status.HTTP_400_BAD_REQUEST)
+        consumer_unit = get_object_or_404(ConsumerUnit, id=request_consumer_unit_id)
+        if consumer_unit.university != request.user.university:
+            raise PermissionDenied()
 
-        university_id = consumer_unit.university.id
-
-        try:
-            RequestsPermissions.check_request_permissions(request.user, user_types_with_permission, university_id)
-        except Exception as error:
-            return Response({"detail": f"{error}"}, status.HTTP_401_UNAUTHORIZED)
-
-        energy_bills = consumer_unit.get_all_energy_bills()
-
-        return Response(energy_bills)
+        if request_consumer_unit_id:
+            energy_bills = consumer_unit.get_all_energy_bills()
+            return Response(energy_bills)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=["post"], url_path="multiple_create")
     def multiple_create(self, request, *args, **kwargs):
@@ -275,6 +156,13 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
         energy_bills_data = request.data.get("energy_bills", [])
         response_data = []
         errors = []
+
+        consumer_unit = get_object_or_404(ConsumerUnit, id=consumer_unit_id)
+        contract = get_object_or_404(Contract, id=contract_id)
+        if consumer_unit.university != request.user.university:
+            raise PermissionDenied()
+        if contract.consumer_unit.id != consumer_unit.id:
+            raise PermissionDenied()
 
         def round_value(value):
             if isinstance(value, int | float | Decimal):
@@ -344,6 +232,11 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         consumer_unit_id = serializer.validated_data["consumer_unit_id"]
+
+        consumer_unit = get_object_or_404(ConsumerUnit, id=consumer_unit_id)
+        if consumer_unit.university != request.user.university:
+            raise PermissionDenied()
+
         logger.info(f"Consumer unit with id: {consumer_unit_id} is uploading a file")
         energy_bill_data = services.ContractServices().get_file_errors(
             serializer.validated_data["file"], consumer_unit_id
@@ -368,13 +261,15 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
         else:
             return Response("Document does not exist", status=400)
 
-    @action(detail=False, methods=["get"], url_path="plot-graph")
+    @action(detail=False, methods=["get"], url_path="plot-graph", permission_classes=[])
     def plot_graph(self, request):
         consumer_unit_id = request.query_params.get("consumer_unit_id", None)
         if consumer_unit_id is None:
             return Response({"error": "consumer_unit_id is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         consumer_unit = get_object_or_404(ConsumerUnit, id=consumer_unit_id)
+        if consumer_unit.university != request.user.university:
+            raise PermissionDenied()
 
         current_month = date.today().replace(day=1) - relativedelta(months=1)
         months = int(request.query_params.get("months", 12))
