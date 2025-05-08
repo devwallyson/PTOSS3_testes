@@ -75,9 +75,9 @@ DEBUG_TOOLBAR_CONFIG = {
 }
 
 
-# DJANGO EXTENSIONS
+# DEVELOPMENT TOOLS
 # -------------------------------------------------------------------------------------
-INSTALLED_APPS += ["django_extensions"]
+INSTALLED_APPS += ["django_extensions", "schema_viewer"]
 
 
 # SECURITY DISABLED FOR DEVELOPMENT

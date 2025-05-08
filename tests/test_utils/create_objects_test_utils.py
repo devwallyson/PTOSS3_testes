@@ -52,7 +52,7 @@ def create_test_energy_bill(dict: dict, contract: Contract, consumer_unit: Consu
 
 
 def create_test_distributor(dict: dict, university: University) -> Distributor:
-    distributor = Distributor.objects.create(name=dict["name"], cnpj=dict["cnpj"], university=university)
+    distributor = Distributor.objects.create(name=dict["name"], cnpj=dict["cnpj"])
 
     return distributor
 

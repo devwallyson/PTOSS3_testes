@@ -85,7 +85,6 @@ class TestConsumerUnit:
         assert contract.end_date == datetime.strptime("2024-12-31", "%Y-%m-%d").date()
 
     def test_edit_consumer_unit_and_contract(self):
-        # Criando a unidade consumidora
         consumer_unit = ConsumerUnit.objects.create(
             university=self.university,
             name=self.consumer_unit_dict["name"],
@@ -94,7 +93,6 @@ class TestConsumerUnit:
             is_active=self.consumer_unit_dict["is_active"],
         )
 
-        # Criando o contrato associado (adicionando end_date)
         contract = Contract.objects.create(
             consumer_unit=consumer_unit,
             peak_contracted_demand_in_kw=self.contract_dict["peak_contracted_demand_in_kw"],
@@ -106,7 +104,6 @@ class TestConsumerUnit:
             off_peak_contracted_demand_in_kw=self.contract_dict["off_peak_contracted_demand_in_kw"],
         )
 
-        # Dados atualizados
         consumer_unit.name = "Unidade Alterada"
         consumer_unit.code = "654321"
         consumer_unit.is_active = False
@@ -119,11 +116,9 @@ class TestConsumerUnit:
         contract.subgroup = "B1"
         contract.save()
 
-        # Atualizando os objetos do banco de dados
         updated_consumer_unit = ConsumerUnit.objects.get(id=consumer_unit.id)
         updated_contract = Contract.objects.get(id=contract.id)
 
-        # Verificações
         assert updated_consumer_unit.name == "Unidade Alterada"
         assert updated_consumer_unit.code == "654321"
         assert updated_consumer_unit.is_active is False
@@ -133,7 +128,6 @@ class TestConsumerUnit:
         assert updated_contract.end_date == datetime.strptime("2024-12-31", "%Y-%m-%d").date()
 
     def test_is_current_energy_bill_filled(self):
-        # Criando a unidade consumidora
         consumer_unit = ConsumerUnit.objects.create(
             university=self.university,
             name=self.consumer_unit_dict["name"],
@@ -142,14 +136,13 @@ class TestConsumerUnit:
             is_active=self.consumer_unit_dict["is_active"],
         )
 
-        # Criando o contrato associado (adicionando end_date)
         contract = Contract.objects.create(
             consumer_unit=consumer_unit,
             peak_contracted_demand_in_kw=self.contract_dict["peak_contracted_demand_in_kw"],
             tariff_flag=self.contract_dict["tariff_flag"],
             distributor=self.distributor,
             start_date=self.contract_dict["start_date"],
-            end_date="2024-12-31",  # Definindo a data de término
+            end_date="2024-12-31",
             subgroup="A1",
             off_peak_contracted_demand_in_kw=self.contract_dict["off_peak_contracted_demand_in_kw"],
         )
@@ -159,7 +152,6 @@ class TestConsumerUnit:
         assert energy_bill_filled in [True, False]
 
     def test_pending_energy_bills_number(self):
-        # Criando a unidade consumidora
         consumer_unit = ConsumerUnit.objects.create(
             university=self.university,
             name=self.consumer_unit_dict["name"],

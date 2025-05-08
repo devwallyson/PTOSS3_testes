@@ -46,11 +46,16 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_active", True)
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("type", models.CustomUser.super_user_type)
+        extra_fields.setdefault("type", self.model.Type.SUPER_USER)
+        extra_fields.pop("is_seed_user", None)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError(_("Superuser must have is_staff=True"))
         if extra_fields.get("is_superuser") is not True:
             raise ValueError(_("Superuser must have is_superuser=True"))
 
-        return self.create(email, password, **extra_fields)
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user

@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from rest_framework.serializers import HyperlinkedModelSerializer, ModelSerializer, Serializer
+from rest_framework.serializers import ModelSerializer, Serializer
 
 from tariffs.models import Tariff
-from universities.models import University
 from utils.cnpj_validator_util import CnpjValidator
 
 from .models import Distributor
@@ -72,32 +71,44 @@ class TariffSerializer(ModelSerializer):
         model = Tariff
 
 
-class DistributorSerializer(HyperlinkedModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    university = serializers.PrimaryKeyRelatedField(queryset=University.objects.all())
-    # tariffs = TariffSerializer(many=True, read_only=True)
-    # consumer_units = serializers.IntegerField(read_only=True)
-    consumer_units_count = serializers.IntegerField(read_only=True)
-    pending_tariffs_count = serializers.IntegerField(read_only=True)
-    is_pending = serializers.BooleanField(read_only=True)
+class DistributorSerializer(ModelSerializer):
+    consumer_units_count = serializers.SerializerMethodField()
+    pending_tariffs_count = serializers.SerializerMethodField()
+    is_pending = serializers.SerializerMethodField()
 
     class Meta:
         model = Distributor
-        fields = "__all__"
+        fields = [
+            "id",
+            "name",
+            "cnpj",
+            "state",
+            "is_active",
+            "is_in_new_resolution",
+            "consumer_units_count",
+            "pending_tariffs_count",
+            "is_pending",
+        ]
+        read_only_fields = ["id"]
 
     def validate_cnpj(self, cnpj: str):
         try:
             CnpjValidator.validate(cnpj)
         except Exception as e:
-            raise serializers.ValidationError(str(e.args))
+            raise serializers.ValidationError(str(e.args)) from e
         return cnpj
 
+    def get_consumer_units_count(self, obj):
+        university = self.context["request"].user.university
+        return obj.consumer_units_count(university)
 
-class DistributorSerializerForDocs(DistributorSerializer):
-    """Esse serializer é usado apenas para documentação no Swagger"""
+    def get_pending_tariffs_count(self, obj):
+        university = self.context["request"].user.university
+        return obj.pending_tariffs_count(university)
 
-    tariffs = BlueAndGreenTariffsSerializer(many=True)
-
+    def get_is_pending(self, obj):
+        university = self.context["request"].user.university
+        return obj.is_pending(university)
 
 class _ConsumerUnitSerializerForDocs(Serializer):
     id = serializers.IntegerField(read_only=True)

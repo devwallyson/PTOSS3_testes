@@ -159,7 +159,7 @@ LOGGING = {
             "datefmt": "%d-%m-%Y %H:%M:%S",
         },
         "verbose": {
-            "format": "%(asctime)-15s | %(levelname)-8s | %(filename)-15s | line:%(lineno)-3s | %(message)s",
+            "format": "%(asctime)-15s | %(levelname)-6s | %(filename)-20s | line:%(lineno)-3s | %(message)s",
             "datefmt": "%d-%m-%Y %H:%M:%S",
         },
     },
@@ -243,3 +243,9 @@ NEW_RESOLUTION_MINIMUM_DEMAND = 30
 MEC_ENERGIA_PASSWORD_ENDPOINT_FIRST_ACCESS = "definir-senha"
 MEC_ENERGIA_PASSWORD_ENDPOINT_ADMIN_RESET = "redefinir-senha"
 MEC_ENERGIA_PASSWORD_ENDPOINT_USER_RESET = "definir-senha"
+
+
+# API DADOS ABERTOS ANEEL
+# -------------------------------------------------------------------------------------
+BASE_URL_API_ANEEL = "https://dadosabertos.aneel.gov.br/api/3/action"
+RESOURCE_ID_APPROVED_TARIFFS = "fcf2906c-7c32-4b9b-a637-054e7a5234f4"

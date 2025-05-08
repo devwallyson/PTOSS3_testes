@@ -76,17 +76,14 @@ university_user = UniversityUser.objects.create(
 )
 
 # Distribuidoras
-
 distributor_neoenergia = Distributor.objects.create(
     name='Neoenergia',
     cnpj='07522669000192',
-    university=university,
 )
 
 distributor_ceb = Distributor.objects.create(
     name='CEB',
     cnpj='00070698000111',
-    university=university,
 )
 
 # Tarifas

@@ -376,7 +376,7 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
 
         consumer_unit = get_object_or_404(ConsumerUnit, id=consumer_unit_id)
 
-        current_month = date.today().replace(day=1)
+        current_month = date.today().replace(day=1) - relativedelta(months=1)
         months = int(request.query_params.get("months", 12))
         all_months = [current_month - relativedelta(months=i) for i in range(months - 1, -1, -1)]
 

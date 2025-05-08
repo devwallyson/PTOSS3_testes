@@ -8,11 +8,13 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
+from tariffs.serializers import DistributorSerializer
 from universities.models import ConsumerUnit, University
 from universities.permissions import ConsumerUnitPermission, UniversityPermission
 from universities.serializers import (
     ConsumerUnitSerializer,
     ConsumerUnitWithContractSerializer,
+    UniversityDistributorSerializer,
     UniversitySerializer,
 )
 from utils.mixins.cache_mixin import CacheModelMixin, ReadOnlyCacheMixin
@@ -31,8 +33,46 @@ class UniversityViewSet(CacheModelMixin, ModelViewSet):
             return University.objects.all()
         return University.objects.filter(id=user.university.id)
 
+    def get_serializer_class(self):
+        if self.action == "get_distributors":
+            return DistributorSerializer
+        if self.action in ["set_distributors"]:
+            return UniversityDistributorSerializer
+        return super().get_serializer_class()
+
     def destroy(self, request, *args, **kwargs):
         raise MethodNotAllowed("DELETE", "You cannot delete a university.")
+
+    @action(detail=True, methods=["get"], url_path="distributors")
+    def get_distributors(self, request, pk=None):
+        university = self.get_object()
+        distributors = university.distributors.all()
+
+        is_pending = request.query_params.get("is_pending", None)
+        if is_pending in ["true", "True", "1", "yes"]:
+            # Corrigir a lógica para filtrar distribuidoras pendentes
+            distributors = [d for d in distributors if d.is_pending]
+
+        distributors = distributors.order_by("name")
+        serializer = self.get_serializer(distributors, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="set-distributors")
+    def set_distributors(self, request, pk=None):
+        university = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        distributors = serializer.validated_data.get("distributors", [])
+        university.distributors.set(distributors)
+        distributors_names = [distributor.name for distributor in distributors]
+        return Response({"detail": f"Distributors set successfully: {distributors_names}."}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="clear-distributors")
+    def clear_distributors(self, request, pk=None):
+        university = self.get_object()
+        university.distributors.clear()
+        university.save()
+        return Response({"detail": "All distributors cleared successfully."}, status=status.HTTP_200_OK)
 
 
 class ConsumerUnitViewSet(ReadOnlyCacheMixin, ReadOnlyModelViewSet):

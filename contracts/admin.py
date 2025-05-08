@@ -6,6 +6,7 @@ from contracts.models import Contract, EnergyBill
 @admin.register(Contract)
 class ContractAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "get_consumer_unit_university",
         "distributor",
         "consumer_unit",
@@ -32,6 +33,7 @@ class ContractAdmin(admin.ModelAdmin):
 @admin.register(EnergyBill)
 class EnergyBillAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "contract",
         "consumer_unit",
         "date",

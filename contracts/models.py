@@ -48,7 +48,7 @@ class Contract(models.Model):
     objects = ContractManager()
 
     def __str__(self):
-        return f"{self.distributor.name} - {self.distributor.university.acronym} ({self.start_date})"
+        return f"{self.distributor.name} - {self.consumer_unit.name} - {self.start_date} - {self.tariff_flag}"
 
     def check_start_date_create_contract(self):
         if self.consumer_unit.current_contract:
