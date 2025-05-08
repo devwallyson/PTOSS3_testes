@@ -10,55 +10,26 @@ from .recommendation import Recommendation
 
 
 class University(models.Model):
-    class Meta:
-        verbose_name_plural = "Universities"
-
-    name = models.CharField(
-        max_length=100,
-        blank=False,
-        null=False,
-        unique=True,
-        verbose_name=_("Nome"),
-        help_text=_("Nome da universidade por extenso"),
-    )
-
-    acronym = models.CharField(
-        null=True,
-        max_length=50,
-        unique=True,
-        verbose_name=_("Sigla"),
-        help_text=_("Exemplo: UnB, UFSC, UFB"),
-    )
-
-    cnpj = models.CharField(
-        max_length=14,
-        blank=False,
-        null=False,
-        unique=True,
-        verbose_name=_("CNPJ"),
-        help_text=_("14 números sem caracteres especiais"),
-    )
-
+    name = models.CharField(max_length=100, blank=False, null=False, unique=True, verbose_name=_("Nome"))
+    acronym = models.CharField(null=True, max_length=50, unique=True, verbose_name=_("Sigla"))
+    cnpj = models.CharField(max_length=14, blank=False, null=False, unique=True, verbose_name=_("CNPJ"))
     is_active = models.BooleanField(default=True)
     created_on = models.DateField(auto_now_add=True)
+    distributors = models.ManyToManyField("tariffs.Distributor", blank=True, related_name="universities")
+
+    class Meta:
+        verbose_name_plural = "Universities"
 
     def __str__(self):
         return f"{self.acronym} - {self.name}"
 
 
 class ConsumerUnit(models.Model):
-    name = models.CharField(
-        max_length=100,
-        verbose_name=_("Nome"),
-        help_text=_("Nome da Unidade Consumidora. Ex: Darcy Ribeiro"),
-    )
-
-    code = models.CharField(
-        max_length=30,
-        verbose_name=_("Código da Unidade Consumidora"),
-        help_text=_("Cheque a conta de luz para obter o código da Unidade Consumidora. Insira apenas números"),
-    )
-
+    name = models.CharField(max_length=100, verbose_name=_("Nome"))
+    code = models.CharField(max_length=30, verbose_name=_("Código da Unidade Consumidora"))
+    total_installed_power = models.DecimalField(decimal_places=2, max_digits=7, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_on = models.DateTimeField(auto_now_add=True)
     university = models.ForeignKey(
         University,
         blank=False,
@@ -68,17 +39,6 @@ class ConsumerUnit(models.Model):
         related_name="consumer_units",
         help_text=_("Uma Unidade Consumidora deve estar ligada a uma Universidade"),
     )
-
-    total_installed_power = models.DecimalField(
-        decimal_places=2,
-        max_digits=7,
-        null=True,
-        blank=True,
-        help_text=_("Potência total de geração de energia instalada em kw"),
-    )
-
-    is_active = models.BooleanField(default=True)
-    created_on = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [

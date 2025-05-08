@@ -2,5 +2,7 @@
 
 django_extensions==3.2.*
 django-debug-toolbar==4.4.*
+django-schema-viewer==0.5.3
 ipdb==0.13.13
 ruff==0.11.5
+rich==14.0.0

@@ -81,32 +81,27 @@ university_user = UniversityUser.objects.create(
 distributor_cemig = Distributor.objects.create(
     name='CEMIG',
     cnpj='06981180000116',
-    university=university,
 )
 
 distributor_dme = Distributor.objects.create(
     name='DME',
     cnpj='23664303000104',
-    university=university,
 )
 
 distributor_elektro = Distributor.objects.create(
     name='Elektro',
     cnpj='02328280000197',
-    university=university,
 )
 
 
 distributor_rge = Distributor.objects.create(
     name='RGE',
     cnpj='02016440000162',
-    university=university,
 )
 
 distributor_ceee = Distributor.objects.create(
     name='CEEE',
     cnpj='08467115000100',
-    university=university,
 )
 
 # Tarifas

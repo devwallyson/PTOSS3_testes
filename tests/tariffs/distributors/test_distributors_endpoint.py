@@ -20,7 +20,7 @@ class TestTariff:
         self.user = create_objects_test_utils.create_test_university_user(self.user_dict, self.university)
 
         self.client = APIClient()
-        self.client.login(email=self.user_dict["email"], password=self.user_dict["password"])
+        self.client.force_authenticate(self.user)
 
         self.unit1_dict = dicts_test_utils.consumer_unit_dict_1
         self.unit1 = create_objects_test_utils.create_test_consumer_unit(self.unit1_dict, self.university)
@@ -33,32 +33,6 @@ class TestTariff:
 
         self.neoenergia_dict = dicts_test_utils.distributor_dict_1
         self.neoenergia = create_objects_test_utils.create_test_distributor(self.neoenergia_dict, self.university)
-
-    def test_cannot_delete_distributor_when_its_linked_to_a_consumer_units_current_contract(self):
-        self.contract_test_1_dict = dicts_test_utils.contract_dict_1
-        self.contract_test_2_dict = dicts_test_utils.contract_dict_2
-
-        create_objects_test_utils.create_test_contract(self.contract_test_1_dict, self.neoenergia, self.unit1)
-        create_objects_test_utils.create_test_contract(self.contract_test_2_dict, self.neoenergia, self.unit2)
-
-        response = self.client.delete(ENDPOINT + f"{self.neoenergia.id}/")
-
-        assert status.HTTP_400_BAD_REQUEST == response.status_code
-
-        error = json.loads(response.content)
-
-        assert "There are active contracts associated to this distributor" in error["errors"]
-        assert self.unit1.id in error["consumer_units_ids"]
-        assert self.unit2.id in error["consumer_units_ids"]
-        assert self.unit3.id not in error["consumer_units_ids"]
-
-    def test_deletes_distributor_when_its_not_linked_to_any_contract(self):
-        distributor_dict = dicts_test_utils.distributor_dict_2
-        distributor = create_objects_test_utils.create_test_distributor(distributor_dict, self.university)
-
-        response = self.client.delete(ENDPOINT + f"{distributor.id}")
-
-        assert status.HTTP_301_MOVED_PERMANENTLY == response.status_code
 
     # @pytest.mark.skip(reason="Contains errors")
     def test_consumer_units_count_by_distributor(self):

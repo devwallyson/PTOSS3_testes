@@ -6,19 +6,20 @@ from tariffs.models import Distributor, Tariff
 @admin.register(Distributor)
 class DistributorAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "name",
         "is_active",
         "is_in_new_resolution",
-        "university",
     )
-    search_fields = ("name",)
-    list_filter = ("university", "is_active", "is_in_new_resolution")
-    ordering = ("university", "name", "is_active")
+    search_fields = ("name", "state", "cnpj")
+    list_filter = ("state", "is_active", "is_in_new_resolution")
+    ordering = ("name", "state", "is_active")
 
 
 @admin.register(Tariff)
 class TariffAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "distributor",
         "subgroup",
         "flag",

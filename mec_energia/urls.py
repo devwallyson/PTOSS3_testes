@@ -40,13 +40,16 @@ urlpatterns = [
     path("api/reset-password/", ResetPassword.as_view()),
     path("api/reset-password/confirm", ConfirmResetPassword.as_view()),
     path("api/", include(router.urls), name="api-root"),
-    path("api/swagger/schema/", schema_view.with_ui("swagger", cache_timeout=0)),
-    path("api/clear-cache/", ClearCacheView.as_view(), name="clear_cache"),
 ]
 
-if settings.DEBUG:
+if settings.ENVIRONMENT in ["development", "staging"]:
     import debug_toolbar
 
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+        path("api/clear-cache/", ClearCacheView.as_view(), name="clear_cache"),
+        path("api/swagger/schema/", schema_view.with_ui("swagger", cache_timeout=0)),
+        path("api/schema-viewer/", include("schema_viewer.urls")),
+    ]
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += [path("__debug__/", include(debug_toolbar.urls))]

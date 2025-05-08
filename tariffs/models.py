@@ -6,42 +6,25 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from contracts.models import Contract
-from universities.models import ConsumerUnit, University
+from universities.models import ConsumerUnit
 
 
 class Distributor(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
-    cnpj = models.CharField(max_length=14, verbose_name=_("CNPJ"), help_text=_("14 números sem caracteres especiais"))
+    cnpj = models.CharField(max_length=14, verbose_name=_("CNPJ"))
+    state = models.CharField(max_length=2, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_in_new_resolution = models.BooleanField(default=True)
-    university = models.ForeignKey(
-        University,
-        on_delete=models.PROTECT,
-        null=False,
-        blank=False,
-    )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=["university", "cnpj"], name="unique_distributor_university_cnpj")
-        ]
-
-    def save(self, *args, **kwargs):
-        """Garante que as validações do modelo sejam aplicadas antes de salvar"""
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
 
-    @property
-    def consumer_units_count(self) -> int:
-        return len(self.get_consumer_units())
+    def consumer_units_count(self, university) -> int:
+        return len(self.get_consumer_units(university))
 
-    @property
-    def pending_tariffs_count(self) -> int:
+    def pending_tariffs_count(self, university=None) -> int:
         count = 0
-        subgroups = self.get_subgroups_pending()
+        subgroups = self.get_subgroups_pending(university)
 
         for subgroup in subgroups:
             if subgroup["pending"] is True:
@@ -49,9 +32,8 @@ class Distributor(models.Model):
 
         return count
 
-    @property
-    def is_pending(self):
-        return bool(self.pending_tariffs_count)
+    def is_pending(self, university=None):
+        return bool(self.pending_tariffs_count(university))
 
     @classmethod
     def get_distributors_pending(cls, university_id):
@@ -64,26 +46,25 @@ class Distributor(models.Model):
 
         return pending_distributors
 
-    def get_consumer_units(self):
+    def get_consumer_units(self, university):
         return ConsumerUnit.objects.filter(
-            university_id=self.university.id,
+            university=university,
             contract__distributor=self,
             contract__end_date__isnull=True,
         )
 
     def get_consumer_units_by_subgroup(self, subgroup):
         return ConsumerUnit.objects.filter(
-            university_id=self.university.id,
             contract__distributor=self,
             contract__end_date__isnull=True,
             contract__subgroup=subgroup,
         )
 
-    def get_subgroups(self):
+    def get_subgroups(self, university):
         subgroups = []
 
         contracts = Contract.objects.filter(
-            consumer_unit__university__id=self.university.id,
+            consumer_unit__university=university,
             distributor=self,
             end_date__isnull=True,
         )
@@ -94,9 +75,9 @@ class Distributor(models.Model):
 
         return subgroups
 
-    def get_consumer_units_separated_by_subgroup(self):
+    def get_consumer_units_separated_by_subgroup(self, university):
         subgroup_list = []
-        subgroups = self.get_subgroups()
+        subgroups = self.get_subgroups(university)
 
         for subgroup in subgroups:
             is_pending = self.check_subgroups_pending(subgroup)
@@ -110,9 +91,9 @@ class Distributor(models.Model):
 
         return subgroup_list
 
-    def get_subgroups_pending(self):
+    def get_subgroups_pending(self, university):
         subgroup_list = []
-        subgroups = self.get_subgroups()
+        subgroups = self.get_subgroups(university)
 
         for subgroup in subgroups:
             is_pending = self.check_subgroups_pending(subgroup)
