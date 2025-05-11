@@ -181,36 +181,36 @@ class TestEnergyBillViewSetTests:
         data = {"consumer_unit_id": consumer_unit_a.id}
 
         client.force_authenticate(user=user_a)
-        response = client.get("/api/energy-bills/plot-graph/", data, format="json")
+        response = client.get("/api/energy-bills/plot-graph/", data=data, format="json")
         assert response.status_code == status.HTTP_200_OK
 
         data["consumer_unit_id"] = consumer_unit_b.id
-        response = client.get("/api/energy-bills/plot-graph/", data, format="json")
+        response = client.get("/api/energy-bills/plot-graph/", data=data, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_plot_graph_permission_guest(self, guest_a, client, consumer_unit_a, consumer_unit_b, energy_bill_a):
         data = {"consumer_unit_id": consumer_unit_a.id}
 
         client.force_authenticate(user=guest_a)
-        response = client.get("/api/energy-bills/plot-graph/", data, format="json")
+        response = client.get("/api/energy-bills/plot-graph/", data=data, format="json")
         assert response.status_code == status.HTTP_200_OK
 
         data["consumer_unit_id"] = consumer_unit_b.id
-        response = client.get("/api/energy-bills/plot-graph/", data, format="json")
+        response = client.get("/api/energy-bills/plot-graph/", data=data, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_plot_graph_permission_sysadmin(self, sysadmin, client, consumer_unit_a):
         data = {"consumer_unit_id": consumer_unit_a.id}
 
         client.force_authenticate(user=sysadmin)
-        response = client.get("/api/energy-bills/plot-graph/", data, format="json")
+        response = client.get("/api/energy-bills/plot-graph/", data=data, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_plot_graph_permission_admin(self, admin_a, client, consumer_unit_a, energy_bill_a):
         data = {"consumer_unit_id": consumer_unit_a.id}
 
         client.force_authenticate(user=admin_a)
-        response = client.get("/api/energy-bills/plot-graph/", data, format="json")
+        response = client.get("/api/energy-bills/plot-graph/", data=data, format="json")
         assert response.status_code == status.HTTP_200_OK
 
     def test_plot_graph_missing_consumer_unit_id(self, user_a, client):

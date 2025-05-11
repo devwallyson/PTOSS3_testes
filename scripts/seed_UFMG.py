@@ -76,6 +76,16 @@ university_user = UniversityUser.objects.create(
     is_seed_user=True
 )
 
+university_guest = UniversityUser.objects.create(
+    university=university,
+    type=UniversityUser.Type.UNIVERSITY_GUEST,
+    password='ufmg',
+    email='guest@ufmg.br',
+    first_name="João",
+    last_name="da Costa",
+    is_seed_user=True
+)
+
 # Distribuidoras
 
 distributor_cemig = Distributor.objects.create(
