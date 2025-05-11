@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.models import CustomUser, UserToken
+from users.models import CustomUser, UniversityUser, UserToken
 from utils.email.send_email import (
     send_email_first_access_password,
     send_email_reset_password,
@@ -26,7 +26,6 @@ from utils.user.authentication import (
 from utils.user.user_type_util import UserType
 
 from . import serializers
-from .requests_permissions import RequestsPermissions
 
 
 class Authentication(ObtainAuthToken):
@@ -92,11 +91,9 @@ class Authentication(ObtainAuthToken):
 
     def _create_and_update_login_response(token, user_id, user_email, user_first_name, user_last_name, user_type):
         response = create_token_response(token, user_id, user_email, user_first_name, user_last_name, user_type)
-
-        if user_type in RequestsPermissions.university_user_permissions:
-            user = RequestsPermissions.get_university_user_object(user_id)
-            university_id = user.university.id
-            response = Authentication._update_university_user_response(response, university_id)
+        user = UniversityUser.objects.get(id=user_id)
+        university_id = user.university.id
+        response = Authentication._update_university_user_response(response, university_id)
 
         return response
 
