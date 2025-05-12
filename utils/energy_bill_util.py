@@ -113,18 +113,21 @@ class EnergyBillUtils:
         EPSILON = 1e-4
 
         def is_zero(val):
-            return val is not None and abs(val) < EPSILON
+            return val is None or val < EPSILON
 
         off_peak_consumption = energy_bill.off_peak_consumption_in_kwh
         off_peak_measured_demand = energy_bill.off_peak_measured_demand_in_kw
         peak_consumption = energy_bill.peak_consumption_in_kwh
         peak_measured_demand = energy_bill.peak_measured_demand_in_kw
 
+        green = energy_bill.contract.tariff_flag == "G"
+
         if (
             is_zero(off_peak_consumption)
             or is_zero(off_peak_measured_demand)
             or is_zero(peak_consumption)
-            or is_zero(peak_measured_demand)
+            or (peak_measured_demand is None and not green)
+            or (peak_measured_demand is not None and peak_measured_demand < EPSILON)
         ):
             return False
         return True

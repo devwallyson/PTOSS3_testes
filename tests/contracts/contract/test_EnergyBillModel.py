@@ -12,7 +12,7 @@ from tests.fixtures import consumer_unit_a, contract_a, distributor_a, universit
 
 
 class TestEnergyBillModel:
-    def test_create_energy_bill_with_max_consumption(self, consumer_unit_a, contract_a):
+    def test_create_energy_bill_with_max_consumption_demand(self, consumer_unit_a, contract_a):
         energy_bill = EnergyBill.objects.create(
             consumer_unit=consumer_unit_a,
             contract=contract_a,
@@ -20,19 +20,6 @@ class TestEnergyBillModel:
             anotacoes="Some notes",
             peak_consumption_in_kwh=Decimal("9999999.99"),
             off_peak_consumption_in_kwh=Decimal("9999999.99"),
-        )
-
-        assert energy_bill.anotacoes == "Some notes"
-        assert energy_bill.peak_consumption_in_kwh == Decimal("9999999.99")
-        assert energy_bill.off_peak_consumption_in_kwh == Decimal("9999999.99")
-        assert energy_bill.date == datetime.strptime("2023-01-01", "%Y-%m-%d").date()
-
-    def test_create_energy_bill_with_max_measured_demand(self, consumer_unit_a, contract_a):
-        energy_bill = EnergyBill.objects.create(
-            consumer_unit=consumer_unit_a,
-            contract=contract_a,
-            date="2023-01-01",
-            anotacoes="Some notes",
             peak_measured_demand_in_kw=Decimal("9999999.99"),
             off_peak_measured_demand_in_kw=Decimal("9999999.99"),
         )
@@ -48,6 +35,10 @@ class TestEnergyBillModel:
             contract=contract_a,
             date="2023-01-01",
             anotacoes="Some notes",
+            peak_consumption_in_kwh=Decimal("9.99"),
+            off_peak_consumption_in_kwh=Decimal("9.99"),
+            peak_measured_demand_in_kw=Decimal("9.99"),
+            off_peak_measured_demand_in_kw=Decimal("9.99"),
         )
 
         try:
@@ -56,6 +47,10 @@ class TestEnergyBillModel:
                 contract=contract_a,
                 date="2023-01-01",
                 anotacoes="Other notes",
+                peak_consumption_in_kwh=Decimal("9.99"),
+                off_peak_consumption_in_kwh=Decimal("9.99"),
+                peak_measured_demand_in_kw=Decimal("9.99"),
+                off_peak_measured_demand_in_kw=Decimal("9.99"),
             )
             assert False
         except Exception as e:
@@ -100,11 +95,13 @@ class TestEnergyBillModel:
                 contract=contract_a,
                 date="2024-05-06",
                 off_peak_consumption_in_kwh=Decimal("0.00"),
+                peak_consumption_in_kwh=Decimal("0.00"),
+                peak_measured_demand_in_kw=Decimal("0.00"),
                 off_peak_measured_demand_in_kw=Decimal("0.00"),
             )
             assert False
         except Exception as e:
-            assert str(e) == "O campo de consumo e demanda não pode ser 0."
+            assert str(e) == "Os campos de consumo e de demanda não podem ser nulos ou zerados."
 
     def test_create_energy_bill_invalid_date(self, consumer_unit_a, contract_a):
         try:
