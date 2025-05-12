@@ -35,6 +35,10 @@ class TestEnergyBillViewSetTests:
             "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
+            "off_peak_consumption_in_kwh": 100.0,
+            "off_peak_measured_demand_in_kw": 50.0,
+            "peak_consumption_in_kwh": 75.0,
+            "peak_measured_demand_in_kw": 60.0,
         }
 
         client.force_authenticate(user=guest_a)
@@ -47,6 +51,10 @@ class TestEnergyBillViewSetTests:
             "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
+            "off_peak_consumption_in_kwh": 100.0,
+            "off_peak_measured_demand_in_kw": 50.0,
+            "peak_consumption_in_kwh": 75.0,
+            "peak_measured_demand_in_kw": 60.0,
         }
 
         client.force_authenticate(user=user_a)
@@ -65,6 +73,10 @@ class TestEnergyBillViewSetTests:
             "contract": contract_a.id,
             "date": "2023-01-01",
             "anotacoes": "Some notes",
+            "off_peak_consumption_in_kwh": 100.0,
+            "off_peak_measured_demand_in_kw": 50.0,
+            "peak_consumption_in_kwh": 75.0,
+            "peak_measured_demand_in_kw": 60.0,
         }
 
         client.force_authenticate(user=admin_a)
@@ -91,6 +103,10 @@ class TestEnergyBillViewSetTests:
             "contract": energy_bill_a.contract.id,
             "date": "2023-01-01",
             "anotacoes": "Updated notes by guest",
+            "off_peak_consumption_in_kwh": 100.0,
+            "off_peak_measured_demand_in_kw": 50.0,
+            "peak_consumption_in_kwh": 75.0,
+            "peak_measured_demand_in_kw": 60.0,
         }
 
         client.force_authenticate(user=sysadmin)
@@ -103,6 +119,10 @@ class TestEnergyBillViewSetTests:
             "contract": energy_bill_a.contract.id,
             "date": "2023-01-01",
             "anotacoes": "Updated notes by guest",
+            "off_peak_consumption_in_kwh": 100.0,
+            "off_peak_measured_demand_in_kw": 50.0,
+            "peak_consumption_in_kwh": 75.0,
+            "peak_measured_demand_in_kw": 60.0,
         }
 
         client.force_authenticate(user=guest_a)

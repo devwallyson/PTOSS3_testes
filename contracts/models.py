@@ -129,7 +129,7 @@ class EnergyBill(models.Model):
             raise Exception("A data da fatura não pode ser anterior à data de início do contrato mais antigo.")
 
         if not EnergyBillUtils.check_valid_consumption_demand(self):
-            raise Exception("O campo de consumo e demanda não pode ser 0.")
+            raise Exception("Os campos de consumo e de demanda não podem ser nulos ou zerados.")
 
         existing_energy_bill = (
             EnergyBill.objects.filter(
