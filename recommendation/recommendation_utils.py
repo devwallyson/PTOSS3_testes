@@ -74,7 +74,9 @@ def process_recommendation(consumer_unit_id):
         errors.append(
             ErrorMensageParser.parse(
                 NotEnoughEnergyBills if atypical_bills_count == 0 else NotEnoughEnergyBillsWithAtypical,
-                (6) if atypical_bills_count == 0 else (6 + atypical_bills_count),
+                (settings.MINIMUM_ENERGY_BILLS_FOR_RECOMMENDATION)
+                if atypical_bills_count == 0
+                else (settings.MINIMUM_ENERGY_BILLS_FOR_RECOMMENDATION),
             )
         )
 
