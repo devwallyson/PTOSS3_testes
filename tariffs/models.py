@@ -53,11 +53,12 @@ class Distributor(models.Model):
             contract__end_date__isnull=True,
         )
 
-    def get_consumer_units_by_subgroup(self, subgroup):
+    def get_consumer_units_by_subgroup(self, subgroup, university=None):
         return ConsumerUnit.objects.filter(
             contract__distributor=self,
             contract__end_date__isnull=True,
             contract__subgroup=subgroup,
+            university=university,
         )
 
     def get_subgroups(self, university):
@@ -82,7 +83,7 @@ class Distributor(models.Model):
         for subgroup in subgroups:
             is_pending = self.check_subgroups_pending(subgroup)
             sb = {"subgroup": subgroup, "pending": is_pending, "consumer_units": []}
-            consumer_unit_by_subgroup = self.get_consumer_units_by_subgroup(sb["subgroup"])
+            consumer_unit_by_subgroup = self.get_consumer_units_by_subgroup(sb["subgroup"], university)
 
             for unit in consumer_unit_by_subgroup:
                 sb["consumer_units"].append({"id": unit.id, "name": unit.name})

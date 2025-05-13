@@ -72,6 +72,7 @@ class UniversitySerializer(UniversityDistributorSerializer):
         instance.save()
         return instance
 
+
 class ConsumerUnitSerializer(serializers.ModelSerializer):
     university = serializers.PrimaryKeyRelatedField(read_only=True)
 

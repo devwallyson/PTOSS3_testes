@@ -92,9 +92,8 @@ class Authentication(ObtainAuthToken):
     def _create_and_update_login_response(token, user_id, user_email, user_first_name, user_last_name, user_type):
         response = create_token_response(token, user_id, user_email, user_first_name, user_last_name, user_type)
         user = UniversityUser.objects.get(id=user_id)
-        university_id = user.university.id
+        university_id = getattr(user.university, "id", None)
         response = Authentication._update_university_user_response(response, university_id)
-
         return response
 
     def _update_super_user_response(response):

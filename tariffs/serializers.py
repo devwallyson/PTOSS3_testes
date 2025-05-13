@@ -110,6 +110,7 @@ class DistributorSerializer(ModelSerializer):
         university = self.context["request"].user.university
         return obj.is_pending(university)
 
+
 class _ConsumerUnitSerializerForDocs(Serializer):
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(read_only=True)

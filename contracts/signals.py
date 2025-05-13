@@ -1,55 +1,52 @@
-from django.db.models.signals import post_save
+import logging
+
+from datetime import date
+
+from dateutil.relativedelta import relativedelta
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from contracts.models import Contract, EnergyBill
 from recommendation.models import Recommendation
 
+logger = logging.getLogger("apps")
+
 
 @receiver(post_save, sender=Contract)
 def trigger_contracts(sender, instance, created, **kwargs):
     consumer_unit = instance.consumer_unit
+    logger.info(f"Contract signal: Consumer unit:={consumer_unit.id}, Contract={instance.id}, Created={created}")
+
     try:
         recommendation_instance = Recommendation.objects.get(consumer_unit=consumer_unit.id)
         recommendation_instance.isValid = False
         recommendation_instance.save()
+        logger.info(f"Contract signal triggered for consumer unit: {consumer_unit}.")
     except Recommendation.DoesNotExist:
-        # print(f"Nenhuma recomendação encontrada para o consumidor: {consumer_unit.id}", flush=True)
-        pass
-
-
-@receiver(post_save, sender=EnergyBill)
-def trigger_bills(sender, instance, created, **kwargs):
-    consumer_unit = instance.consumer_unit
-
-    try:
-        # Tenta obter a instância de Recommendation
-        recommendation_instance = Recommendation.objects.get(consumer_unit=consumer_unit.id)
-
-        # Verifica se a lista de datas não está vazia
-        if recommendation_instance.dates:
-            start_date_calculated = min(recommendation_instance.dates)
-            end_date_calculated = max(recommendation_instance.dates)
-            in_date_range = start_date_calculated <= instance.date <= end_date_calculated
-            in_tariff_range = (
-                recommendation_instance.tariffStartDate <= instance.date <= recommendation_instance.tariffEndDate
-            )
-            after_tariff_end = instance.date >= recommendation_instance.tariffEndDate
-            after_end_date = instance.date >= end_date_calculated
-
-            if in_date_range or in_tariff_range or after_tariff_end or after_end_date:
-                try:
-                    recommendation_instance = Recommendation.objects.get(consumer_unit=consumer_unit.id)
-                    recommendation_instance.isValid = False
-                    recommendation_instance.save()
-                except Recommendation.DoesNotExist:
-                    # print(f"Nenhuma recomendação encontrada para o consumidor: {consumer_unit.id}", flush=True)
-                    pass
-            else:
-                print("A data da fatura NÃO está no intervalo analisado", flush=True)
-        else:
-            print("A lista de datas na recomendação está vazia.", flush=True)
-
-    except Recommendation.DoesNotExist:
-        print(f"Nenhuma recomendação encontrada para a unidade consumidora: {consumer_unit.id}", flush=True)
+        logger.info(f"No recommendation found for consumer unit: {consumer_unit.id} during contract signal.")
     except Exception as e:
-        print(f"Ocorreu um erro: {str(e)}", flush=True)
+        logger.error(f"Error in trigger_contracts signal for consumer unit {consumer_unit.id}: {str(e)}")
+
+
+@receiver([post_save, post_delete], sender=EnergyBill)
+def trigger_bills(sender, instance, **kwargs):
+    consumer_unit = instance.consumer_unit
+    recommendation_instance = Recommendation.objects.filter(consumer_unit=consumer_unit.id).first()
+    if recommendation_instance is None:
+        logger.info(f"No recommendation found for consumer unit: {consumer_unit.id} during bill signal.")
+        return
+
+    logger.info(f"Energy bill signal: Consumer unit={consumer_unit.id}, Bill={instance.id}, Date={instance.date}")
+    try:
+        today = date.today()
+        start_date = today.replace(day=1) - relativedelta(months=13)
+
+        if instance.date >= start_date:
+            logger.info(f"Energy Bill {instance.id} within analysis period. Invalidating recommendation.")
+            recommendation_instance.isValid = False
+            recommendation_instance.save()
+        else:
+            logger.info(f"Energy Bill {instance.id} outside analysis period. No action needed.")
+
+    except Exception as e:
+        logger.error(f"Error in trigger_bills: Consumer Unit={consumer_unit.id}, Energy Bill={instance.id}: {str(e)}")
