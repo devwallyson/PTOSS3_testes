@@ -91,7 +91,7 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
     queryset = EnergyBill.objects.all()
     serializer_class = serializers.EnergyBillSerializer
     cache_key_prefix = "energybill_viewset"
-    cache_timeout = 3600 * 168  # 3600 segundos * 24  = 1 dia (dados nao mudam com frequência)
+    cache_timeout = 3600 * 168
     permission_classes = [ContractPermission]
 
     def get_queryset(self):
@@ -271,15 +271,26 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
         if consumer_unit.university != request.user.university:
             raise PermissionDenied()
 
-        current_month = date.today().replace(day=1) - relativedelta(months=1)
-        months = int(request.query_params.get("months", 12))
-        all_months = [current_month - relativedelta(months=i) for i in range(months - 1, -1, -1)]
+        today = date.today()
+        current_bill = EnergyBill.objects.filter(
+            consumer_unit=consumer_unit_id,
+            date__year=today.year,
+            date__month=today.month,
+        ).exists()
 
-        energy_bills_qs = (
+        current_month = today.replace(day=1)
+        end_date = current_month if current_bill else current_month - relativedelta(months=1)
+        num_months = int(request.query_params.get("months", 12))
+        all_months = [end_date - relativedelta(months=i) for i in range(num_months - 1, -1, -1)]
+        start_date = all_months[0]
+        end_date = end_date + relativedelta(months=1) - relativedelta(days=1)
+
+        queryset = (
             EnergyBill.objects.filter(
                 consumer_unit=consumer_unit_id,
-                date__gte=all_months[0],
-                date__lte=all_months[-1],
+                date__gte=start_date,
+                date__lte=end_date,
+                is_atypical=False,
             )
             .values(
                 "date",
@@ -291,15 +302,15 @@ class EnergyBillViewSet(CacheModelMixin, ModelViewSet):
             .order_by("date")
         )
 
-        if not energy_bills_qs.exists():
+        if not queryset.exists():
             return Response(
-                {"errors": ["No energy bills found for this consumer unit in the time period"]},
+                {"errors": f"No energy bills for consumer unit from {start_date} to {end_date}."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        bills_by_month = {bill["date"].strftime("%Y-%m"): bill for bill in energy_bills_qs}
-
         energy_bills = []
+        bills_by_month = {bill["date"].strftime("%Y-%m"): bill for bill in queryset}
+
         for month in all_months:
             year_month = month.strftime("%Y-%m")
             bill = bills_by_month.get(year_month, {})
