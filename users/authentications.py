@@ -1,5 +1,6 @@
+import logging
+
 from django.contrib.auth.tokens import default_token_generator
-from django.core.exceptions import ObjectDoesNotExist
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
@@ -23,9 +24,10 @@ from utils.user.authentication import (
     generate_link_to_reset_password,
     generate_random_password,
 )
-from utils.user.user_type_util import UserType
 
 from . import serializers
+
+logger = logging.getLogger("django.request")
 
 
 class Authentication(ObtainAuthToken):
@@ -36,22 +38,24 @@ class Authentication(ObtainAuthToken):
             serializer.is_valid(raise_exception=True)
             user = serializer.validated_data["user"]
 
-            if user.account_password_status not in ["OK", "user_reset"]:
-                raise Exception("Usuário não pode fazer login no sistema")
+            valid_password_status = [CustomUser.PasswordStatus.OK, CustomUser.PasswordStatus.USER_RESET]
+            if user.account_password_status not in valid_password_status:
+                logger.warning(f"User {user.email} tried to login with invalid password status")
+                raise Exception("User with invalid password status")
 
             try:
-                existing_token = Token.objects.get(user=user)
-                existing_token.delete()
+                token = Token.objects.get(user=user)
+                if user.type != CustomUser.Type.UNIVERSITY_GUEST:
+                    self._invalid_sessions_tokens(user)
+                    token = Token.objects.create(user=user)
             except Token.DoesNotExist:
-                pass
+                token = Token.objects.create(user=user)
 
-            token = Token.objects.create(user=user)
         except Exception as error:
-            return Response({"Authentication error": f"{str(error)}"}, status.HTTP_401_UNAUTHORIZED)
+            return Response({"Authentication error": str(error)}, status.HTTP_401_UNAUTHORIZED)
 
         try:
-            UserType.is_valid_user_type(user.type)
-            response = Authentication._create_and_update_login_response(
+            response = self._create_and_update_login_response(
                 token.key,
                 user.id,
                 user.email,
@@ -59,10 +63,9 @@ class Authentication(ObtainAuthToken):
                 user.last_name,
                 user.type,
             )
-
             return Response(response)
         except Exception as error:
-            return Response({"Authentication error": f"{str(error)}"}, status.HTTP_400_BAD_REQUEST)
+            return Response({"Authentication error": str(error)}, status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(
         query_serializer=serializers.AuthenticationGetTokenParamsSerializer,
@@ -73,37 +76,27 @@ class Authentication(ObtainAuthToken):
         if not params_serializer.is_valid():
             return Response(params_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        try:
-            Token.objects.get(pk=request.data["token"])
-            is_valid_token = True
-        except ObjectDoesNotExist:
-            is_valid_token = False
-
+        is_valid_token = Token.objects.filter(pk=request.data["token"]).exists()
         response = create_valid_token_response(is_valid_token)
-
         return Response(response)
 
+    @staticmethod
     def _invalid_sessions_tokens(user):
-        sessions_tokens = Token.objects.filter(user=user)
+        Token.objects.filter(user=user).delete()
 
-        if sessions_tokens:
-            sessions_tokens.delete()
-
-    def _create_and_update_login_response(token, user_id, user_email, user_first_name, user_last_name, user_type):
+    @classmethod
+    def _create_and_update_login_response(cls, token, user_id, user_email, user_first_name, user_last_name, user_type):
         response = create_token_response(token, user_id, user_email, user_first_name, user_last_name, user_type)
         user = UniversityUser.objects.get(id=user_id)
         university_id = getattr(user.university, "id", None)
-        response = Authentication._update_university_user_response(response, university_id)
-        return response
+        return cls._update_university_user_response(response, university_id)
 
+    @staticmethod
     def _update_super_user_response(response):
         return response
 
+    @staticmethod
     def _update_university_user_response(response, university_id):
-        response = Authentication._insert_university_id_on_response(response, university_id)
-        return response
-
-    def _insert_university_id_on_response(response, university_id):
         response["user"]["universityId"] = university_id
         return response
 
@@ -115,7 +108,8 @@ class Logout(APIView):
     def post(self, request):
         try:
             token = Token.objects.get(user=request.user)
-            token.delete()
+            if request.user.type != CustomUser.Type.UNIVERSITY_GUEST:
+                token.delete()
 
             return Response({"detail": "Logout successful"}, status=status.HTTP_200_OK)
         except Token.DoesNotExist:
