@@ -7,6 +7,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -224,6 +225,13 @@ class ResetPassword(APIView):
     def post(self, request):
         try:
             request_user_email = request.GET.get("email")
+
+            # Se o usuário for o usuário de demonstração, não pode resetar a senha
+            if request_user_email.endswith("@mepaenergia.org"):
+                user = UniversityUser.objects.get(email=request_user_email)
+                if user.is_guest:
+                    raise PermissionDenied()
+
             Password.send_email_reset_password(request_user_email)
             response = EndpointsUtils.create_message_endpoint_response(
                 status=EndpointsUtils.status_success,

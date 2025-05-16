@@ -103,6 +103,10 @@ class UniversityUsersViewSet(ModelViewSet):
         user = request.user
         data = request.data
 
+        # Caso o usuário seja o usuário de demonstração, a ação de mudar senha é bloqueada
+        if user.email.endswith("@mepaenergia.org") and user.is_guest:
+            raise PermissionDenied()
+
         current_password = data.get("current_password")
         new_password = data.get("new_password")
 
