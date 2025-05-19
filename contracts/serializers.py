@@ -89,7 +89,9 @@ class ContractListSerializer(serializers.HyperlinkedModelSerializer):
 
 class EnergyBillSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    contract = serializers.PrimaryKeyRelatedField(queryset=Contract.objects.all())
+    contract = serializers.PrimaryKeyRelatedField(
+        queryset=Contract.objects.select_related('distributor', 'consumer_unit')
+    )
     consumer_unit = serializers.PrimaryKeyRelatedField(queryset=ConsumerUnit.objects.all())
 
     class Meta:
