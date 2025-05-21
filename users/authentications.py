@@ -46,7 +46,7 @@ class Authentication(ObtainAuthToken):
 
             try:
                 token = Token.objects.get(user=user)
-                if user.type != CustomUser.Type.UNIVERSITY_GUEST:
+                if user.email.endswith("@mepaenergia.org") and user.is_guest:
                     self._invalid_sessions_tokens(user)
                     token = Token.objects.create(user=user)
             except Token.DoesNotExist:
@@ -109,7 +109,7 @@ class Logout(APIView):
     def post(self, request):
         try:
             token = Token.objects.get(user=request.user)
-            if request.user.type != CustomUser.Type.UNIVERSITY_GUEST:
+            if request.user.email.endswith("@mepaenergia.org") and request.user.is_guest:
                 token.delete()
 
             return Response({"detail": "Logout successful"}, status=status.HTTP_200_OK)
@@ -156,7 +156,7 @@ class Password:
     def send_email_reset_password_by_admin(email):
         try:
             user = CustomUser.search_user_by_email(email=email)
-            user.account_password_status = "admin_reset"
+            user.account_password_status = CustomUser.PasswordStatus.ADMIN_RESET
             user.save()
             user.set_password(generate_random_password())
             Authentication._invalid_sessions_tokens(user)
@@ -169,7 +169,7 @@ class Password:
     def send_email_reset_password(email):
         try:
             user = CustomUser.search_user_by_email(email=email)
-            user.account_password_status = "user_reset"
+            user.account_password_status = CustomUser.PasswordStatus.USER_RESET
             user.save()
             token = Password.generate_password_token(user)
             link = Password.generate_link_to_reset_password(user, token, "user_reset")
@@ -197,11 +197,14 @@ class ResetPasswordByAdmin(APIView):
     def post(self, request, *args, **kwargs):
         request_user = request.user
 
-        if request_user.type not in ["super_user", "university_admin"]:
-            raise Exception("Esse usuário não tem permissão para executar essa ação")
+        if not request_user.is_admin and not request_user.is_manager:
+            raise PermissionDenied()
 
         user_id = int(request.GET.get("user_id"))
         user_for_reset = CustomUser.search_user_by_id(user_id)
+
+        if request_user.is_manager and user_for_reset.university != request_user.university:
+            raise PermissionDenied()
 
         if request_user.id == user_for_reset.id:
             raise Exception("Utilize o esqueci minha senha")
