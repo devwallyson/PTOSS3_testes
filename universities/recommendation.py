@@ -40,9 +40,7 @@ class Recommendation:
             energy_bills_lists = EnergyBillUtils.generate_dates(start_date, date.today())
 
             energy_bills = EnergyBill.objects.filter(consumer_unit=consumer_unit_id)
-            energy_bills_dict = {
-                (bill.date.month, bill.date.year): bill for bill in energy_bills
-            }
+            energy_bills_dict = {(bill.date.month, bill.date.year): bill for bill in energy_bills}
 
             for years in energy_bills_lists:
                 for energy_bill_object in energy_bills_lists[str(years)]:
