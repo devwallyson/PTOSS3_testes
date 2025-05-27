@@ -228,12 +228,10 @@ class ResetPassword(APIView):
     def post(self, request):
         try:
             request_user_email = request.GET.get("email")
+            user = UniversityUser.objects.get(email=request_user_email)
 
-            # Se o usuário for o usuário de demonstração, não pode resetar a senha
-            if request_user_email.endswith("@mepaenergia.org"):
-                user = UniversityUser.objects.get(email=request_user_email)
-                if user.is_guest:
-                    raise PermissionDenied()
+            if user.type == UniversityUser.Type.UNIVERSITY_GUEST:
+                raise PermissionDenied()
 
             Password.send_email_reset_password(request_user_email)
             response = EndpointsUtils.create_message_endpoint_response(

@@ -42,12 +42,12 @@ class UniversityUsersViewSet(ModelViewSet):
         allowed_types = [
             UniversityUser.Type.UNIVERSITY_ADMIN,
             UniversityUser.Type.UNIVERSITY_USER,
-            UniversityUser.Type.UNIVERSITY_GUEST,
+            UniversityUser.Type.UNIVERSITY_VIEWER,
         ]
         if user.is_operational or user.is_guest:
-            raise PermissionDenied("Common users cannot create accounts.")
+            raise PermissionDenied()
         elif user_type not in allowed_types:
-            raise PermissionDenied("Managers can only create 'university_admin' or 'university_user' accounts.")
+            raise PermissionDenied()
 
         serializer.save(university_id=university_id)
 
@@ -56,13 +56,16 @@ class UniversityUsersViewSet(ModelViewSet):
         if user.is_staff:
             serializer.delete()
         else:
-            raise PermissionDenied("Only super_admin can delete an account.")
+            raise PermissionDenied()
 
     def perform_update(self, serializer):
         user = self.request.user
         if user.is_staff or user.is_admin:
             serializer.save()
             return
+        if user.type == UniversityUser.Type.UNIVERSITY_GUEST:
+            raise PermissionDenied()
+
         university_user = UniversityUser.objects.get(id=user.id)
         user_type = serializer.validated_data.get("type")
         if user.is_manager:
@@ -104,7 +107,7 @@ class UniversityUsersViewSet(ModelViewSet):
         data = request.data
 
         # Caso o usuário seja o usuário de demonstração, a ação de mudar senha é bloqueada
-        if user.email.endswith("@mepaenergia.org") and user.is_guest:
+        if user.type == UniversityUser.Type.UNIVERSITY_GUEST:
             raise PermissionDenied()
 
         current_password = data.get("current_password")

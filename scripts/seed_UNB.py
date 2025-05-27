@@ -75,17 +75,24 @@ university_user = UniversityUser.objects.create(
     is_seed_user=True
 )
 
-
 university_guest = UniversityUser.objects.create(
     university=university,
     type=UniversityUser.Type.UNIVERSITY_GUEST,
     password='unb',
-    email='guest@unb.br',
-    first_name="Genivaldo",
-    last_name="Santos",
+    email='convidado@unb.br',
+    first_name="Convidado",
     is_seed_user=True
 )
 
+university_viewer = UniversityUser.objects.create(
+    university=university,
+    type=UniversityUser.Type.UNIVERSITY_VIEWER,
+    password='unb',
+    email='viewer@unb.br',
+    first_name="Jubiscreudo",
+    last_name="Reis",
+    is_seed_user=True
+)
 
 # Distribuidoras
 distributor_neoenergia = Distributor.objects.create(

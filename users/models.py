@@ -84,6 +84,7 @@ class CustomUser(AbstractUser):
         UNIVERSITY_ADMIN = "university_admin", _("university_admin")
         UNIVERSITY_USER = "university_user", _("university_user")
         UNIVERSITY_GUEST = "university_guest", _("university_guest")
+        UNIVERSITY_VIEWER = "university_viewer", _("university_viewer")
 
     class PasswordStatus(models.TextChoices):
         OK = "OK", _("OK")
@@ -95,9 +96,22 @@ class CustomUser(AbstractUser):
     university_admin_user_type = Type.UNIVERSITY_ADMIN
     university_user_type = Type.UNIVERSITY_USER
     university_guest_type = Type.UNIVERSITY_GUEST
+    university_viewer_type = Type.UNIVERSITY_VIEWER
 
-    all_user_types = [super_user_type, university_admin_user_type, university_user_type, university_guest_type]
-    university_user_types = [super_user_type, university_admin_user_type, university_user_type, university_guest_type]
+    all_user_types = [
+        super_user_type,
+        university_admin_user_type,
+        university_user_type,
+        university_guest_type,
+        university_viewer_type,
+    ]
+    university_user_types = [
+        super_user_type,
+        university_admin_user_type,
+        university_user_type,
+        university_guest_type,
+        university_viewer_type,
+    ]
 
     user_types = Type.choices
     password_status = PasswordStatus.choices
@@ -144,8 +158,12 @@ class CustomUser(AbstractUser):
         return self.type == CustomUser.Type.UNIVERSITY_USER
 
     @property
+    def is_viewer(self):
+        return self.type == CustomUser.Type.UNIVERSITY_VIEWER
+
+    @property
     def is_guest(self):
-        return self.type == CustomUser.Type.UNIVERSITY_GUEST
+        return self.type == CustomUser.Type.UNIVERSITY_GUEST or self.type == CustomUser.Type.UNIVERSITY_VIEWER
 
     class Meta:
         verbose_name = _("User")

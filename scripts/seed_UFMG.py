@@ -76,13 +76,14 @@ university_user = UniversityUser.objects.create(
     is_seed_user=True
 )
 
-university_guest = UniversityUser.objects.create(
+
+university_viewer = UniversityUser.objects.create(
     university=university,
-    type=UniversityUser.Type.UNIVERSITY_GUEST,
+    type=UniversityUser.Type.UNIVERSITY_VIEWER,
     password='ufmg',
-    email='guest@ufmg.br',
-    first_name="João",
-    last_name="da Costa",
+    email='viewer@ufmg.br',
+    first_name="Alvaro",
+    last_name="Cunha",
     is_seed_user=True
 )
 
