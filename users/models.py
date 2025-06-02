@@ -14,7 +14,7 @@ from .managers import CustomUserManager
 
 class UserTokenManager(models.Manager):
     def valid_tokens(self):
-        expiration_time = timezone.now() - timedelta(minutes=settings.RESET_PASSWORD_TOKEN_TIMEOUT)
+        expiration_time = timezone.now() - timedelta(minutes=settings.PASSWORD_RESET_TOKEN_TIMEOUT)
         return self.filter(created_at__gt=expiration_time)
 
     def get_user_users_waiting_to_send_email(self):
@@ -33,7 +33,11 @@ class UserToken(models.Model):
 
     @property
     def is_valid_token(self):
-        expiration_time = self.created_at + timedelta(minutes=settings.RESET_PASSWORD_TOKEN_TIMEOUT)
+        if self.user.account_password_status == CustomUser.PasswordStatus.FIRST_ACCESS:
+            timeout = settings.FIRST_ACCESS_TOKEN_TIMEOUT
+        else:
+            timeout = settings.PASSWORD_RESET_TOKEN_TIMEOUT
+        expiration_time = self.created_at + timedelta(minutes=timeout)
         return timezone.now() < expiration_time
 
     def set_invalid_tried_datetime_to_send_new_email(self):
